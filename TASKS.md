@@ -29,7 +29,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 ## Prioridad 1 — Crítico
 
 ### Task 1 — Inicializar el proyecto
-- [ ] **1.1** `chore: init project structure` — Crear `src/` con los paquetes `capture/`, `detection/`, `tracking/`, `identity/`, `matching/`, `direction/`, `dedup/`, `events/`, más `enrollment/`, `config/`, `tests/`. Añadir `.gitignore` que excluya `data/`, `*.npy`, `roster.json`, `recordings/` y `.venv/` (nada biométrico ni video al repo).
+- [x] **1.1** `chore: init project structure` — Crear `src/` con los paquetes `capture/`, `detection/`, `tracking/`, `identity/`, `matching/`, `direction/`, `dedup/`, `events/`, más `enrollment/`, `config/`, `tests/`. Añadir `.gitignore` que excluya `data/`, `*.npy`, `roster.json`, `recordings/` y `.venv/` (nada biométrico ni video al repo).
 - [ ] **1.2** `chore: pin dependencies for python 3.14 cpu` — `requirements.txt` con `ultralytics`, `opencv-python`, `numpy`, `torch` (CPU), `insightface`, `onnxruntime`, `torchreid`, `httpx`, `pyyaml`, `pytest`. Antes de fijar versiones, verificar que `insightface` y `onnxruntime` tengan wheels para Python 3.14; si no, usar un venv con 3.13 y anotarlo en el README.
 - [ ] **1.3** `feat(config): add pilot config file and loader` — `config/pilot.yaml` (fuentes de cámara, umbrales, ventana de tiempo, URL del backend) + `src/config.py` con una función `load_config(path)` que devuelva un dataclass.
 - [x] **1.4** `docs: add PRD, ARCHITECTURE and AGENTS` — Subir los documentos del proyecto a la raíz.

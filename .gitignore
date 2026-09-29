@@ -1,0 +1,15 @@
+# Biometric data and video: never commit (see AGENTS.md rule 1)
+data/
+*.npy
+roster.json
+recordings/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Model weights downloaded at runtime
+*.pt
+*.onnx
