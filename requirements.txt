@@ -1,0 +1,28 @@
+# Target: CPython 3.14 on Windows x64, CPU only (no CUDA).
+# Do NOT use Python 3.14.1: torchvision excludes it (CPython regression, fixed in 3.14.2).
+# Versions verified on PyPI on 2026-09-29 (cp314 win_amd64 wheels available).
+
+# Detection (YOLO26n-pose)
+ultralytics==8.4.165
+# PyPI's Windows torch wheels are CPU-only builds
+torch==2.14.0
+torchvision==0.29.0
+
+# Vision / arrays
+opencv-python==5.0.0.93
+numpy==2.5.3
+
+# Identity (ArcFace via InsightFace, CPU runtime)
+insightface==2.0
+onnxruntime==1.30.0
+
+# Body re-id (OSNet): torchreid is intentionally NOT pinned yet.
+# Its latest release (0.2.5, 2022) ships only an sdist, with no cp314 wheel.
+# Decide how to load OSNet before task 4.4.
+
+# Events / config
+httpx==0.28.1
+pyyaml==6.0.3
+
+# Tests
+pytest==9.1.1
