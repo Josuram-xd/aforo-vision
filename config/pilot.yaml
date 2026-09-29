@@ -1,0 +1,39 @@
+# Pilot configuration for aforo-vision.
+# Real secrets and production URLs do NOT go here (see AGENTS.md):
+#   AFORO_BACKEND_URL           overrides backend.url
+#   AFORO_CAMERA_OUTSIDE_SOURCE overrides the camera-outside source (RTSP URL with credentials)
+#   AFORO_CAMERA_INSIDE_SOURCE  overrides the camera-inside source
+# Thresholds below are starting points; tune them after the rehearsal (task 8.3).
+
+cameras:
+  # Both cameras run the same pipeline (AGENTS.md rule 3).
+  # source: USB index (int) or stream URL (str).
+  camera-outside:
+    source: "rtsp://USER:PASSWORD@192.168.43.100:554/stream1"
+  camera-inside:
+    source: 0
+
+detection:
+  model: yolo26n-pose.pt
+  confidence_threshold: 0.5
+
+tracking:
+  iou_threshold: 0.3        # min IoU to associate a detection with a track
+  max_age_frames: 30        # frames a track survives without a detection
+  min_hits: 3               # detections before a track is considered confirmed
+  trajectory_length: 30     # size of the per-track deque (task 3.4)
+
+identity:
+  face_similarity_threshold: 0.45   # cosine similarity, periocular ArcFace embedding
+  body_similarity_threshold: 0.60   # cosine similarity, OSNet embedding
+
+matching:
+  time_window_seconds: 5.0  # max gap between outside and inside sightings of one crossing
+
+dedup:
+  ttl_seconds: 10.0
+
+backend:
+  url: "http://localhost:3000"
+  timeout_seconds: 5.0
+  retry_queue_path: data/retry_queue.sqlite
