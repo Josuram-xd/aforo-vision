@@ -13,6 +13,9 @@ cameras:
   camera-inside:
     source: 0
 
+capture:
+  reconnect_interval_seconds: 5.0  # retry period when a camera is unavailable or drops
+
 detection:
   model: yolo26n-pose.pt
   confidence_threshold: 0.5

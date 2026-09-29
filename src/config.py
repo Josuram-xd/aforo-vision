@@ -26,6 +26,11 @@ class CameraConfig:
 
 
 @dataclass(frozen=True)
+class CaptureConfig:
+    reconnect_interval_seconds: float
+
+
+@dataclass(frozen=True)
 class DetectionConfig:
     model: str
     confidence_threshold: float
@@ -65,6 +70,7 @@ class BackendConfig:
 @dataclass(frozen=True)
 class PilotConfig:
     cameras: dict[str, CameraConfig]
+    capture: CaptureConfig
     detection: DetectionConfig
     tracking: TrackingConfig
     identity: IdentityConfig
@@ -85,6 +91,9 @@ def load_config(path: str | Path) -> PilotConfig:
 
     return PilotConfig(
         cameras=_parse_cameras(_section(raw, "cameras")),
+        capture=CaptureConfig(
+            reconnect_interval_seconds=_positive_float(raw, "capture", "reconnect_interval_seconds"),
+        ),
         detection=DetectionConfig(
             model=str(_field(raw, "detection", "model")),
             confidence_threshold=_unit_float(raw, "detection", "confidence_threshold"),

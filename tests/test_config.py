@@ -32,6 +32,7 @@ def test_loads_repo_pilot_yaml():
     assert set(config.cameras) == {"camera-outside", "camera-inside"}
     assert config.cameras["camera-inside"].source == 0
     assert config.matching.time_window_seconds > 0
+    assert config.capture.reconnect_interval_seconds > 0
 
 
 def test_env_overrides_backend_url_and_camera_source(monkeypatch):
