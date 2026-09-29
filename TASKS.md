@@ -35,7 +35,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 - [x] **1.4** `docs: add PRD, ARCHITECTURE and AGENTS` — Subir los documentos del proyecto a la raíz.
 
 ### Task 2 — Captura de cámaras
-- [ ] **2.1** `feat(capture): add threaded frame grabber for usb and rtsp` — `src/capture/frame_grabber.py`: clase `FrameGrabber(source, camera_id)` con un hilo por cámara y método `read_latest()`; la misma clase acepta índice USB (`0`) o URL RTSP.
+- [x] **2.1** `feat(capture): add threaded frame grabber for usb and rtsp` — `src/capture/frame_grabber.py`: clase `FrameGrabber(source, camera_id)` con un hilo por cámara y método `read_latest()`; la misma clase acepta índice USB (`0`) o URL RTSP.
 - [ ] **2.2** `feat(capture): auto-reconnect dropped streams` — Si la cámara WiFi se cae, reintentar la conexión cada N segundos sin tumbar el programa.
 - [ ] **2.3** `feat(debug): add local preview window with fps overlay` — Ventana `cv2.imshow` por cámara con FPS y cajas dibujadas; se activa con un flag `--debug`.
 - [ ] **2.4** (sin commit) Verificar **antes de comprar** que la cámara WiFi exponga RTSP u ONVIF en red local. Presupuesto total del proyecto: ~500.000 COP.
