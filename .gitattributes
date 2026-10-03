@@ -1,0 +1,2 @@
+# Los hooks de git deben tener saltos de línea LF.
+.githooks/* text eol=lf

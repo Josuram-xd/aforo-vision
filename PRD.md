@@ -26,7 +26,7 @@ Durante la sesión de un curso, en una sola puerta:
 - No cubre el corredor de 4 partes del campus (torniquetes + pedestales) — eso queda documentado como arquitectura objetivo a futuro, no como parte de este piloto.
 - No entrena modelos de reconocimiento facial desde cero — usa modelos pre-entrenados (transfer learning / embeddings ya entrenados).
 - No procesa ni transmite video a la nube — todo el procesamiento es local.
-- No maneja autenticación de usuarios ni permisos — es un piloto de un día, supervisado.
+- No gestiona usuarios ni contraseñas: solo valida los tokens de login emitidos por Cognito (definido en `aforo-backend`) para el servidor de video local.
 
 ## 4. Usuarios
 
@@ -57,7 +57,10 @@ Durante la sesión de un curso, en una sola puerta:
 8. Manejar el caso de 2 personas que se tapan una a otra (oclusión parcial).
 9. Construir el evento resuelto (JSON) y enviarlo al backend (`aforo-backend`) por HTTPS.
 10. Si falla el envío (red caída), guardar el evento en una cola local y reintentar cuando vuelva la conexión.
-11. (Opcional, para la demo) Exponer una vista de video anotado en la red local, para mostrar en vivo cómo el sistema está detectando.
+11. (Opcional, para la demo) Exponer el video de las cámaras **solo en la red local** y **solo a usuarios con login**:
+    - Usuarios `viewer`: ven el video de las cámaras.
+    - Usuarios `dev`: ven además el video **anotado** con cómo va analizando el sistema (cajas, IDs de track, identidad y confianza, método `FACE`/`BODY_ONLY`, checkpoint y dirección decidida, FPS).
+    - El video no se graba ni sale del laptop.
 
 ## 7. Métricas de éxito del piloto
 

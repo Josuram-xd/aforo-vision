@@ -19,7 +19,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 | A — Arranque (en paralelo) | 1-3 | 1-2 | 1-3 | 1-2 |
 | B — Núcleo | 4 | 3-7 | 4-6 | 3-5 (con datos mock) |
 | C — Integración | — | — | 7 | 6 |
-| D — Ensayo y ajustes | 5 | 8-9 | 8-11 | 7-8 |
+| D — Ensayo y ajustes | 5 | 8-9, 11 (login) | 8-11 | 7-8, 11 (login) |
 | E — Extras | 6 | 10 | 12-13 | 9-10 |
 
 **Hito fin de septiembre:** fase A completa → modelo corriendo con la webcam del laptop (este repo, tasks 1-3) y todo lo demás desplegado aunque sea en "hola mundo".
@@ -57,7 +57,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 
 ### Task 5 — Enrolamiento del curso
 - [ ] **5.1** `feat(enrollment): add enroll student script` — `enrollment/enroll_student.py`: captura N muestras con la webcam, promedia el embedding periocular y lo guarda en `data/embeddings/` (local, fuera de git).
-- [ ] **5.2** `feat(enrollment): export roster without biometrics` — Generar `roster.json` solo con `personId` y `name` (sin embeddings). Después sigue con la task 4 del repo: `aforo-db`.
+- [ ] **5.2** `feat(enrollment): export roster without biometrics` — Generar `roster.json` solo con `personId` (UUID v4, como exige el contrato de `aforo-backend`; `aforo-db/scripts/seed_people.py` rechaza otros formatos) y `name` (sin embeddings). Después sigue con la task 4 del repo: `aforo-db`.
 - [ ] **5.3** `docs: add consent form and surveillance notice templates` — Formato de consentimiento informado y aviso de videovigilancia para la puerta (Ley 1581 de 2012).
 
 ### Task 6 — Checkpoints y dirección
@@ -103,7 +103,13 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 ## Prioridad 3 — Extras
 
 ### Task 12 — Vista en vivo para la demo
-- [ ] **12.1** `feat(preview): serve annotated mjpeg stream on local network` — Servidor MJPEG mínimo con el video anotado de una cámara, solo en red local. Después sigue con la task 9 del repo: `aforo-frontend`.
+> Depende de: Seguir con la task 11 del repo: `aforo-backend` (User Pool de Cognito).
+
+- [ ] **12.1** `feat(stream): serve mjpeg streams on local network` — `src/stream/server.py`: `GET /stream/<cameraId>` con los frames de cada cámara, escuchando solo en la IP de la red local (configurable en `pilot.yaml`). Nunca escribe frames a disco.
+- [ ] **12.2** `feat(stream): require cognito token and group` — Validar el token de Cognito (firma con JWKS cacheado, issuer, client, expiración) y el claim `cognito:groups`: `viewer` o `dev` para ver; sin token 401, grupo incorrecto 403. IDs del User Pool por variable de entorno.
+- [ ] **12.3** `feat(stream): add dev analysis overlay stream` — `GET /stream/<cameraId>/dev` solo para `dev`: video con cajas, ID de track, nombre + confianza, `FACE`/`BODY_ONLY`, checkpoint, dirección resuelta y FPS (reutiliza `src/debug/preview.py`).
+- [ ] **12.4** `test(stream): cover auth and group checks` — Tokens firmados con una llave de prueba: válido, expirado, sin grupo, `viewer` pidiendo `/dev` (403).
+  Después sigue con la task 9 del repo: `aforo-frontend`.
 
 ### Task 13 — Pruebas con video grabado
 - [ ] **13.1** `test: replay recorded clips through the pipeline` — Test de integración con clips del ensayo (grabados con consentimiento, guardados solo en local y excluidos de git).

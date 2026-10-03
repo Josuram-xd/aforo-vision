@@ -1,0 +1,11 @@
+#!/bin/sh
+# Rechaza commits que atribuyen autoría a una IA (ver AGENTS.md, "Reglas de git").
+# Activar una vez por clon: git config core.hooksPath .githooks
+
+PATTERN='co-authored-by:.*(claude|anthropic|copilot|cursor|openai|chatgpt|codex|gemini|devin)|generated with \[?claude|noreply@anthropic\.com'
+
+if grep -Eiq "$PATTERN" "$1"; then
+  echo "ERROR: el mensaje del commit atribuye autoría a una IA (Co-Authored-By / Generated with)." >&2
+  echo "Quita esa línea: en este proyecto ningún commit puede tener coautoría de una IA." >&2
+  exit 1
+fi

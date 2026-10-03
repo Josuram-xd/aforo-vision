@@ -8,9 +8,19 @@ Este archivo le dice a los asistentes de IA (Claude Code, Cursor, GitHub Copilot
 
 Antes de proponer cambios, lee `PRD.md` (qué debe hacer el sistema) y `ARCHITECTURE.md` (cómo está construido, en inglés).
 
+## Reglas de git (obligatorias, sin excepciones)
+
+1. **Ninguna IA puede hacer commit ni push.** Ningún asistente (Claude Code, Cursor, Copilot, Codex, Gemini, etc.) ejecuta `git commit`, `git push`, `git merge`, `git rebase`, `git tag` ni `git reset`, ni crea o fusiona PRs, ni por terminal ni por herramientas MCP/API de GitHub. El agente deja los cambios en el árbol de trabajo y, si ayuda, **propone** el mensaje de commit (formato de `TASKS.md`); el commit y el push los hace siempre una persona.
+2. **Nadie puede tener `Co-Authored-By` de una IA.** Ningún commit ni PR puede incluir líneas `Co-Authored-By: Claude ...` (ni de ninguna otra IA), `noreply@anthropic.com` ni "Generated with Claude Code". Esto aplica también a las personas: si el mensaje propuesto trae esa línea, se borra antes de commitear.
+3. **Cómo se hace cumplir:**
+   - `.githooks/commit-msg` rechaza localmente esos mensajes. Actívalo una vez por clon: `git config core.hooksPath .githooks`.
+   - `.github/workflows/no-ai-coauthor.yml` falla en GitHub si algún commit del historial los tiene.
+   - `.claude/settings.json` desactiva la coautoría automática de Claude Code y le bloquea `git commit`/`git push`.
+   No desactives ni modifiques estos tres archivos sin que el usuario lo pida explícitamente.
+
 ## Reglas para el agente
 
-1. **El video nunca sale de este repositorio ni del laptop.** Ningún cambio debe agregar código que suba frames, clips o imágenes crudas a un servicio externo. Solo el JSON del evento resuelto viaja fuera (ver `ARCHITECTURE.md` sección 4.8-4.9).
+1. **El video nunca sale de este repositorio ni del laptop.** Ningún cambio debe agregar código que suba frames, clips o imágenes crudas a un servicio externo (nube, Amplify, `aforo-backend`, servicios de streaming). Solo el JSON del evento resuelto viaja fuera (ver `ARCHITECTURE.md` sección 4.8-4.9). La única excepción es el servidor de video de la sección 4.10: transmite **solo en la red local**, **solo a usuarios con login** (Cognito, grupos `viewer`/`dev`) y nunca graba.
 2. **No inventes un "modelo periocular" propietario.** La identificación periocular se hace recortando la región de los ojos y pasándola por un modelo de embeddings faciales estándar (ArcFace/InsightFace) — no existe un modelo comercial dedicado "periocular", y el código/documentación debe seguir siendo honesto sobre esto.
 3. **Mantén ambas cámaras simétricas.** `camera-outside` y `camera-inside` deben correr la misma lógica de detección/tracking/identidad/anti-spoofing. No agregues lógica que sea exclusiva de una sola cámara sin actualizar también la otra y documentar por qué.
 4. **La dirección (ENTRY/EXIT) se decide por orden de checkpoint**, no por orientación corporal. Si tocas `src/direction/resolver.py`, no reintroduzcas lógica de "mirando hacia adelante/atrás" como señal primaria — eso ya se descartó por ser vulnerable a caminar de espaldas (ver ADR-003 en `ARCHITECTURE.md`).
@@ -32,3 +42,4 @@ Antes de proponer cambios, lee `PRD.md` (qué debe hacer el sistema) y `ARCHITEC
 - Cualquier llamada de red que no sea a `aforo-backend` (por ejemplo, subir datos a un servicio externo nuevo).
 - Instalar dependencias del sistema operativo (fuera de `pip`).
 - Modificar `config/pilot.yaml` con credenciales reales de la cámara WiFi o URLs de producción del backend.
+- Exponer el servidor de video (sección 4.10) fuera de la red local (port forwarding, túneles tipo ngrok/Cloudflare, `0.0.0.0` en una red pública) o permitir acceso sin token.

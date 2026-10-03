@@ -1,0 +1,26 @@
+# Falla si algún commit del repositorio atribuye autoría a una IA (ver AGENTS.md, "Reglas de git").
+name: no-ai-coauthor
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Revisar mensajes de commit
+        run: |
+          pattern='co-authored-by:.*(claude|anthropic|copilot|cursor|openai|chatgpt|codex|gemini|devin)|generated with \[?claude|noreply@anthropic\.com'
+          bad=0
+          for sha in $(git rev-list HEAD); do
+            if git log -1 --format=%B "$sha" | grep -Eiq "$pattern"; then
+              echo "Coautoría de IA en $(git log -1 --format='%h %s' "$sha")"
+              bad=1
+            fi
+          done
+          [ "$bad" -eq 0 ] && echo "Ningún commit tiene coautoría de IA."
+          exit "$bad"

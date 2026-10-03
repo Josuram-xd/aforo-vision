@@ -133,6 +133,11 @@ Produces the resolved event (see `aforo-backend/ARCHITECTURE.md` for the full sh
 - Sends the event via `POST /events` to `aforo-backend` over HTTPS.
 - If the request fails (network down), the event is pushed onto a local **FIFO retry queue** (on-disk, e.g. SQLite or a flat file) and retried with backoff until it succeeds — no event is lost to a brief connectivity gap.
 
+### 4.10 Local stream server (optional, demo)
+- Small HTTP server on the laptop serving MJPEG per camera: `GET /stream/<cameraId>` (plain frames) and `GET /stream/<cameraId>/dev` (frames with the analysis overlay: boxes, track IDs, identity + confidence, `FACE`/`BODY_ONLY`, checkpoint and resolved direction, FPS — reuses `src/debug/preview.py`'s drawing).
+- **Auth**: every request carries a Cognito access token (from `aforo-frontend`'s login). The server validates signature, issuer, audience/client and expiry against the User Pool's JWKS (cached locally) and checks the `cognito:groups` claim: `viewer` or `dev` for plain streams, `dev` only for `/dev` streams. No token → `401`, wrong group → `403`.
+- Binds only to the LAN interface (the hotspot network), never exposed to the internet; frames are encoded in memory and never written to disk.
+
 ## 5. Architecture Decision Records
 
 ### ADR-001: Local processing on the laptop, not cloud/EC2
@@ -155,6 +160,11 @@ Produces the resolved event (see `aforo-backend/ARCHITECTURE.md` for the full sh
 ### ADR-005: Same detection/anti-spoofing logic on both cameras (not split roles)
 **Decision**: Both cameras run the identical detection → pose → tracking → identity pipeline; neither camera has a "simpler" role.
 **Why**: the professor and Josuram specifically want both cameras able to independently detect identity and resist walking-backwards/hide-behind-someone tricks, so that the cross-checkpoint match has two independently reliable observations to reconcile, rather than one strong camera and one weak one.
+
+### ADR-006: Camera viewing stays on the local network, gated by the same login
+**Decision**: Logged-in users watch the cameras through `aforo-vision`'s local stream server (4.10), not through the cloud. `aforo-backend` only authenticates users (Cognito); video never reaches AWS.
+**Why**: keeps ADR-001's privacy guarantee (Ley 1581: video and identities stay on the laptop) and costs nothing; relaying video through AWS (Kinesis Video Streams, a media server on EC2) would cost money and move biometric footage to the cloud.
+**Trade-off**: the camera views only work for devices on the same network as the laptop, and the page that shows them must be served over plain HTTP from that network (e.g. the frontend running on the laptop), because a browser blocks `http://` LAN images inside an HTTPS page such as the Amplify deployment.
 
 ## 6. Data structures used (course mapping — Estructuras de Datos)
 
