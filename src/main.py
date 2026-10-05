@@ -7,7 +7,8 @@ import time
 from src.capture.frame_grabber import FrameGrabber
 from src.config import load_config
 from src.debug.preview import Annotation, PreviewWindows
-from src.detection.yolo_pose import Detection, YoloPoseDetector
+from src.detection.yolo_pose import YoloPoseDetector
+from src.tracking.sort_tracker import SortTracker, Track
 
 logger = logging.getLogger("aforo-vision")
 
@@ -36,7 +37,12 @@ def main(argv: list[str] | None = None) -> int:
         camera_id: YoloPoseDetector(config.detection.model, config.detection.confidence_threshold)
         for camera_id in config.cameras
     }
-    detections: dict[str, list[Detection]] = {}
+    trackers = {
+        camera_id: SortTracker(config.tracking.iou_threshold, config.tracking.max_age_frames,
+                               config.tracking.min_hits)
+        for camera_id in config.cameras
+    }
+    tracks: dict[str, list[Track]] = {}
     preview = PreviewWindows() if args.debug else None
     last_index: dict[str, int] = {}
 
@@ -53,12 +59,11 @@ def main(argv: list[str] | None = None) -> int:
                 if is_new:
                     last_index[grabber.camera_id] = frame.index
                     got_new_frame = True
-                    detections[grabber.camera_id] = detectors[grabber.camera_id].detect(frame.image)
-                    # Tracking plugs in here (tasks 3.2-3.5)
+                    found = detectors[grabber.camera_id].detect(frame.image)
+                    tracks[grabber.camera_id] = trackers[grabber.camera_id].update(found)
 
                 if preview is not None:
-                    boxes = [Annotation(d.x1, d.y1, d.x2, d.y2, f"{d.score:.2f}")
-                             for d in detections.get(grabber.camera_id, ())]
+                    boxes = [Annotation(*t.box, f"id {t.id}") for t in tracks.get(grabber.camera_id, ())]
                     preview.update(grabber.camera_id, frame.image if is_new else None, grabber.is_connected, boxes)
 
             if preview is not None and not preview.poll():
