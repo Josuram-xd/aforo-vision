@@ -10,7 +10,7 @@ PILOT_YAML = Path(__file__).resolve().parent.parent / "config" / "pilot.yaml"
 
 @pytest.fixture(autouse=True)
 def clear_env(monkeypatch):
-    for name in ("AFORO_BACKEND_URL", "AFORO_CAMERA_OUTSIDE_SOURCE", "AFORO_CAMERA_INSIDE_SOURCE"):
+    for name in ("AFORO_BACKEND_URL", "AFORO_BACKEND_SECRET", "AFORO_CAMERA_OUTSIDE_SOURCE", "AFORO_CAMERA_INSIDE_SOURCE"):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -41,6 +41,14 @@ def test_env_overrides_backend_url_and_camera_source(monkeypatch):
     config = load_config(PILOT_YAML)
     assert config.backend.url == "https://example.test/prod"
     assert config.cameras["camera-inside"].source == 1
+
+
+def test_shared_secret_comes_only_from_the_environment_and_is_never_printed(monkeypatch):
+    assert load_config(PILOT_YAML).backend.shared_secret is None
+    monkeypatch.setenv("AFORO_BACKEND_SECRET", "s3cret-value-123456")
+    backend = load_config(PILOT_YAML).backend
+    assert backend.shared_secret == "s3cret-value-123456"
+    assert "s3cret" not in repr(backend)
 
 
 def test_missing_file_raises(tmp_path):

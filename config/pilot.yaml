@@ -3,6 +3,7 @@
 #   AFORO_BACKEND_URL           overrides backend.url
 #   AFORO_CAMERA_OUTSIDE_SOURCE overrides the camera-outside source (RTSP URL with credentials)
 #   AFORO_CAMERA_INSIDE_SOURCE  overrides the camera-inside source
+#   AFORO_BACKEND_SECRET        shared secret sent in the X-Aforo-Secret header of POST /events
 # Thresholds below are starting points; tune them after the rehearsal (task 8.3).
 
 cameras:

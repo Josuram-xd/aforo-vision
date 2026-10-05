@@ -1,7 +1,7 @@
 """Load and validate the pilot configuration (config/pilot.yaml)."""
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -9,6 +9,7 @@ import yaml
 CAMERA_IDS = ("camera-outside", "camera-inside")
 
 _ENV_BACKEND_URL = "AFORO_BACKEND_URL"
+_ENV_BACKEND_SECRET = "AFORO_BACKEND_SECRET"  # shared secret for POST /events; never goes in pilot.yaml
 _ENV_CAMERA_SOURCE = {
     "camera-outside": "AFORO_CAMERA_OUTSIDE_SOURCE",
     "camera-inside": "AFORO_CAMERA_INSIDE_SOURCE",
@@ -65,6 +66,7 @@ class BackendConfig:
     url: str
     timeout_seconds: float
     retry_queue_path: Path
+    shared_secret: str | None = field(default=None, repr=False)  # repr=False: never print it in logs
 
 
 @dataclass(frozen=True)
@@ -197,4 +199,5 @@ def _parse_backend(section: dict) -> BackendConfig:
         url=url.rstrip("/"),
         timeout_seconds=_positive_float(raw, "backend", "timeout_seconds"),
         retry_queue_path=Path(_field(raw, "backend", "retry_queue_path")),
+        shared_secret=os.environ.get(_ENV_BACKEND_SECRET) or None,
     )
