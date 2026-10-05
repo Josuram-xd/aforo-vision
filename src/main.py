@@ -6,7 +6,8 @@ import time
 
 from src.capture.frame_grabber import FrameGrabber
 from src.config import load_config
-from src.debug.preview import PreviewWindows
+from src.debug.preview import Annotation, PreviewWindows
+from src.detection.yolo_pose import Detection, YoloPoseDetector
 
 logger = logging.getLogger("aforo-vision")
 
@@ -30,6 +31,12 @@ def main(argv: list[str] | None = None) -> int:
         FrameGrabber(camera.source, camera.camera_id, config.capture.reconnect_interval_seconds)
         for camera in config.cameras.values()
     ]
+    # Same model and threshold for both cameras (AGENTS.md rule 3)
+    detectors = {
+        camera_id: YoloPoseDetector(config.detection.model, config.detection.confidence_threshold)
+        for camera_id in config.cameras
+    }
+    detections: dict[str, list[Detection]] = {}
     preview = PreviewWindows() if args.debug else None
     last_index: dict[str, int] = {}
 
@@ -46,10 +53,13 @@ def main(argv: list[str] | None = None) -> int:
                 if is_new:
                     last_index[grabber.camera_id] = frame.index
                     got_new_frame = True
-                    # Detection and tracking plug in here (task 3)
+                    detections[grabber.camera_id] = detectors[grabber.camera_id].detect(frame.image)
+                    # Tracking plugs in here (tasks 3.2-3.5)
 
                 if preview is not None:
-                    preview.update(grabber.camera_id, frame.image if is_new else None, grabber.is_connected)
+                    boxes = [Annotation(d.x1, d.y1, d.x2, d.y2, f"{d.score:.2f}")
+                             for d in detections.get(grabber.camera_id, ())]
+                    preview.update(grabber.camera_id, frame.image if is_new else None, grabber.is_connected, boxes)
 
             if preview is not None and not preview.poll():
                 break
