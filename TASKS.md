@@ -45,7 +45,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 - [x] **3.2** `feat(tracking): add bipartite graph and hungarian assignment` — `src/tracking/hungarian.py`: implementación propia del grafo bipartito y el algoritmo húngaro (estructura principal del curso). Costo = 1 − IoU.
 - [x] **3.3** `feat(tracking): add sort tracker with kalman filter` — `src/tracking/sort_tracker.py`: clase `SortTracker` que usa 3.2 para asociar detecciones con tracks entre frames y asigna IDs estables.
 - [x] **3.4** `feat(tracking): keep per-track trajectory deque` — Cada track guarda un `deque(maxlen=N)` con sus últimos centroides y keypoints.
-- [ ] **3.5** `feat(tracking): handle partial occlusion with iou and keypoints` — Si dos cajas se solapan, usar los keypoints visibles para no fusionar a dos personas en un solo track.
+- [x] **3.5** `feat(tracking): handle partial occlusion with iou and keypoints` — Si dos cajas se solapan, usar los keypoints visibles para no fusionar a dos personas en un solo track.
 - [ ] **3.6** `test(tracking): compare hungarian against scipy on known cases` — Tests que validen 3.2 contra `scipy.optimize.linear_sum_assignment`.
 
 ### Task 4 — Identidad

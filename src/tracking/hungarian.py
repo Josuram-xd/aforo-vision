@@ -105,15 +105,22 @@ def hungarian(cost: Sequence[Sequence[float]]) -> list[tuple[int, int]]:
 
 
 def associate(
-    detections: Sequence[Box], tracks: Sequence[Box], iou_threshold: float
+    detections: Sequence[Box], tracks: Sequence[Box], iou_threshold: float,
+    similarity: Sequence[Sequence[float]] | None = None,
 ) -> tuple[list[tuple[int, int]], list[int], list[int]]:
-    """Match detections to tracks by maximum overlap, dropping pairs with IoU below the threshold.
+    """Match detections to tracks by maximum similarity, dropping pairs with IoU below the threshold.
+
+    `similarity[detection][track]` (0..1) defaults to the IoU; pass a matrix to rank candidates with
+    other cues (see occlusion.py). The IoU gate applies either way.
 
     Returns (matches, unmatched_detection_indices, unmatched_track_indices).
     """
-    graph = BipartiteGraph.from_boxes(detections, tracks)
+    if similarity is None:
+        graph = BipartiteGraph.from_boxes(detections, tracks)
+    else:
+        graph = BipartiteGraph([[1.0 - value for value in row] for row in similarity])
     matches = [
-        (det, trk) for det, trk in graph.min_cost_matching() if 1.0 - graph.weights[det][trk] >= iou_threshold
+        (det, trk) for det, trk in graph.min_cost_matching() if iou(detections[det], tracks[trk]) >= iou_threshold
     ]
     matched_dets = {det for det, _ in matches}
     matched_trks = {trk for _, trk in matches}

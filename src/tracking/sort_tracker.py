@@ -6,6 +6,7 @@ import numpy as np
 
 from src.detection.yolo_pose import Detection
 from src.tracking.hungarian import associate
+from src.tracking.occlusion import occlusion_aware_similarity
 
 _EPS = 1e-6
 
@@ -80,6 +81,15 @@ class Track:
         self.time_since_update += 1
         return box
 
+    def predicted_keypoints(self) -> np.ndarray:
+        """Last observed keypoints moved along with the box predicted for the current frame."""
+        last_x, last_y = self.centroids[-1]
+        x1, y1, x2, y2 = self.box
+        shifted = self.detection.keypoints.copy()
+        shifted[:, 0] += (x1 + x2) / 2 - last_x
+        shifted[:, 1] += (y1 + y2) / 2 - last_y
+        return shifted
+
     def update(self, detection: Detection) -> None:
         self._filter.update(detection[:4])
         self.detection = detection
@@ -107,7 +117,11 @@ class SortTracker:
     def update(self, detections: list[Detection]) -> list[Track]:
         """Process one frame. Returns the confirmed tracks that were matched to a detection in it."""
         predicted = [track.predict() for track in self._tracks]
-        matches, unmatched_dets, _ = associate([d[:4] for d in detections], predicted, self.iou_threshold)
+        det_boxes = [d[:4] for d in detections]
+        similarity = occlusion_aware_similarity(
+            det_boxes, [d.keypoints for d in detections], predicted, [t.predicted_keypoints() for t in self._tracks]
+        )
+        matches, unmatched_dets, _ = associate(det_boxes, predicted, self.iou_threshold, similarity)
 
         for det_index, track_index in matches:
             track = self._tracks[track_index]
