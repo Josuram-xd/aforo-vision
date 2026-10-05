@@ -73,7 +73,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 - [x] **7.1** `feat(events): add event builder matching shared contract` — `src/events/builder.py`: función `build_event(...)` con el esquema de `aforo-backend/ARCHITECTURE.md`. Mantener sincronizado con la task 3 del repo `aforo-backend`.
 - [x] **7.2** `feat(events): add https uploader for post events` — `src/events/uploader.py`: clase `EventUploader` con `send(event)` sobre `httpx`.
 - [x] **7.3** `feat(events): add persistent fifo retry queue` — Cola FIFO en SQLite: si falla el envío, el evento se guarda y se reintenta en orden cuando vuelva la red.
-- [ ] **7.4** `feat(main): wire full pipeline for two cameras` — `src/main.py`: une captura → detección → tracking → identidad → matching → dirección → dedup → envío.
+- [x] **7.4** `feat(main): wire full pipeline for two cameras` — `src/main.py`: une captura → detección → tracking → identidad → matching → dirección → dedup → envío.
 - [ ] **7.5** `feat(main): check backend health on startup` — Llamar `GET /health` (task 2 de `aforo-backend`) al arrancar y avisar en consola si no hay conexión.
 
 ### Task 8 — Ensayo del piloto
