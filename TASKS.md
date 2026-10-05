@@ -41,8 +41,8 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 - [ ] **2.4** (sin commit) Verificar **antes de comprar** que la cámara WiFi exponga RTSP u ONVIF en red local. Presupuesto total del proyecto: ~500.000 COP.
 
 ### Task 3 — Detección y tracking **[HITO SEPT]**
-- [ ] **3.1** `feat(detection): add yolo26n-pose detector wrapper` — `src/detection/yolo_pose.py`: función `detect(frame) -> list[Detection]` con caja, score y keypoints.
-- [ ] **3.2** `feat(tracking): add bipartite graph and hungarian assignment` — `src/tracking/hungarian.py`: implementación propia del grafo bipartito y el algoritmo húngaro (estructura principal del curso). Costo = 1 − IoU.
+- [x] **3.1** `feat(detection): add yolo26n-pose detector wrapper` — `src/detection/yolo_pose.py`: función `detect(frame) -> list[Detection]` con caja, score y keypoints.
+- [x] **3.2** `feat(tracking): add bipartite graph and hungarian assignment` — `src/tracking/hungarian.py`: implementación propia del grafo bipartito y el algoritmo húngaro (estructura principal del curso). Costo = 1 − IoU.
 - [ ] **3.3** `feat(tracking): add sort tracker with kalman filter` — `src/tracking/sort_tracker.py`: clase `SortTracker` que usa 3.2 para asociar detecciones con tracks entre frames y asigna IDs estables.
 - [ ] **3.4** `feat(tracking): keep per-track trajectory deque` — Cada track guarda un `deque(maxlen=N)` con sus últimos centroides y keypoints.
 - [ ] **3.5** `feat(tracking): handle partial occlusion with iou and keypoints` — Si dos cajas se solapan, usar los keypoints visibles para no fusionar a dos personas en un solo track.
