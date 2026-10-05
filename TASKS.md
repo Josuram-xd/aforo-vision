@@ -53,7 +53,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 - [x] **4.2** `feat(identity): add arcface embedding extractor` — Función `embed(crop) -> np.ndarray` usando InsightFace (ArcFace), normalizada.
 - [x] **4.3** `feat(identity): add embedding lookup hash table` — Clase `IdentityIndex`: tabla hash `personId → embedding` con búsqueda por similitud coseno y umbral configurable.
 - [x] **4.4** `feat(identity): add osnet body re-id fallback` — `src/identity/body_reid.py`: embedding corporal para cuando no hay rostro usable; solo sirve para contar y emparejar, nunca para poner nombre.
-- [ ] **4.5** `test(identity): cover lookup thresholds` — Tests con embeddings sintéticos: match, no-match y empate.
+- [x] **4.5** `test(identity): cover lookup thresholds` — Tests con embeddings sintéticos: match, no-match y empate.
 
 ### Task 5 — Enrolamiento del curso
 - [ ] **5.1** `feat(enrollment): add enroll student script` — `enrollment/enroll_student.py`: captura N muestras con la webcam, promedia el embedding periocular y lo guarda en `data/embeddings/` (local, fuera de git).
