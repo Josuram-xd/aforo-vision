@@ -57,7 +57,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 
 ### Task 5 — Enrolamiento del curso
 - [x] **5.1** `feat(enrollment): add enroll student script` — `enrollment/enroll_student.py`: captura N muestras con la webcam, promedia el embedding periocular y lo guarda en `data/embeddings/` (local, fuera de git).
-- [ ] **5.2** `feat(enrollment): export roster without biometrics` — Generar `roster.json` solo con `personId` (UUID v4, como exige el contrato de `aforo-backend`; `aforo-db/scripts/seed_people.py` rechaza otros formatos) y `name` (sin embeddings). Después sigue con la task 4 del repo: `aforo-db`.
+- [x] **5.2** `feat(enrollment): export roster without biometrics` — Generar `roster.json` solo con `personId` (UUID v4, como exige el contrato de `aforo-backend`; `aforo-db/scripts/seed_people.py` rechaza otros formatos) y `name` (sin embeddings). Después sigue con la task 4 del repo: `aforo-db`.
 - [ ] **5.3** `docs: add consent form and surveillance notice templates` — Formato de consentimiento informado y aviso de videovigilancia para la puerta (Ley 1581 de 2012).
 
 ### Task 6 — Checkpoints y dirección
