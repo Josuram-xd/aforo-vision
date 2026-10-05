@@ -40,7 +40,7 @@ class CrossingMatch:
     outside: Sighting
     inside: Sighting
     similarity: float
-    method: str  # "FACE" or "BODY": which embedding scored the pair (same values as the event's `method`)
+    method: str  # "FACE" or "BODY_ONLY": which embedding scored the pair (same values as the event contract's `method`)
 
 
 class CrossCheckpointMatcher:
@@ -87,7 +87,7 @@ class CrossCheckpointMatcher:
         if outside.face is not None and inside.face is not None:
             similarity, threshold, method = _cosine(outside.face, inside.face), self.face_threshold, "FACE"
         elif outside.body is not None and inside.body is not None:
-            similarity, threshold, method = _cosine(outside.body, inside.body), self.body_threshold, "BODY"
+            similarity, threshold, method = _cosine(outside.body, inside.body), self.body_threshold, "BODY_ONLY"
         else:
             return None
         return (similarity, method) if similarity >= threshold else None

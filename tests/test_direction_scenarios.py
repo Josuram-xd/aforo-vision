@@ -68,19 +68,19 @@ def test_entering_backwards_is_still_entry():
     # checkpoints still says ENTRY.
     out = ANA.seen_by(OUTSIDE, 1, 10.0, shows_face=True)
     ins = ANA.seen_by(INSIDE, 5, 12.0, shows_face=False)
-    assert _crossings([out], [ins]) == [(ENTRY, "BODY")]
+    assert _crossings([out], [ins]) == [(ENTRY, "BODY_ONLY")]
 
 
 def test_leaving_backwards_is_still_exit():
     out = ANA.seen_by(OUTSIDE, 2, 32.0, shows_face=False)
     ins = ANA.seen_by(INSIDE, 6, 30.0, shows_face=True)
-    assert _crossings([out], [ins]) == [(EXIT, "BODY")]
+    assert _crossings([out], [ins]) == [(EXIT, "BODY_ONLY")]
 
 
 def test_entering_with_the_back_to_both_cameras_is_counted_and_entry():
     out = ANA.seen_by(OUTSIDE, 1, 10.0, shows_face=False)
     ins = ANA.seen_by(INSIDE, 5, 12.0, shows_face=False)
-    assert _crossings([out], [ins]) == [(ENTRY, "BODY")]
+    assert _crossings([out], [ins]) == [(ENTRY, "BODY_ONLY")]
 
 
 def test_one_person_enters_while_another_leaves_at_the_same_time():

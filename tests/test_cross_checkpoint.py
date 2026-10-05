@@ -72,7 +72,7 @@ def test_face_embeddings_are_preferred_over_body_and_use_the_face_threshold():
 
 def test_body_only_pairs_use_the_body_threshold():
     out, ins = _out(1, 10.0, body=_unit(0)), _in(7, 11.0, body=_unit(50))  # cos 50 = 0.64
-    assert _matcher(body=0.6).match([out], [ins])[0][0].method == "BODY"
+    assert _matcher(body=0.6).match([out], [ins])[0][0].method == "BODY_ONLY"
     assert _matcher(body=0.7).match([out], [ins])[0] == []
 
 
