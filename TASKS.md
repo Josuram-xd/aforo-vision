@@ -50,7 +50,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 
 ### Task 4 — Identidad
 - [x] **4.1** `feat(identity): add periocular crop from face landmarks` — `src/identity/periocular.py`: función `crop_periocular(frame, landmarks)` que recorta solo la región de los ojos (funciona con tapabocas).
-- [ ] **4.2** `feat(identity): add arcface embedding extractor` — Función `embed(crop) -> np.ndarray` usando InsightFace (ArcFace), normalizada.
+- [x] **4.2** `feat(identity): add arcface embedding extractor` — Función `embed(crop) -> np.ndarray` usando InsightFace (ArcFace), normalizada.
 - [ ] **4.3** `feat(identity): add embedding lookup hash table` — Clase `IdentityIndex`: tabla hash `personId → embedding` con búsqueda por similitud coseno y umbral configurable.
 - [ ] **4.4** `feat(identity): add osnet body re-id fallback` — `src/identity/body_reid.py`: embedding corporal para cuando no hay rostro usable; solo sirve para contar y emparejar, nunca para poner nombre.
 - [ ] **4.5** `test(identity): cover lookup thresholds` — Tests con embeddings sintéticos: match, no-match y empate.
