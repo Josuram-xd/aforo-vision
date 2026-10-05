@@ -16,9 +16,8 @@ numpy==2.5.3
 insightface==2.0
 onnxruntime==1.30.0
 
-# Body re-id (OSNet): torchreid is intentionally NOT pinned yet.
-# Its latest release (0.2.5, 2022) ships only an sdist, with no cp314 wheel.
-# Decide how to load OSNet before task 4.4.
+# Body re-id (OSNet): torchreid is intentionally NOT used (latest release 0.2.5 has no cp314 wheel).
+# OSNet-AIN is exported once to ONNX (python -m tools.export_osnet_onnx, needs torch) and run with onnxruntime.
 
 # Events / config
 httpx==0.28.1
