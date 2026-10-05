@@ -63,7 +63,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 ### Task 6 — Checkpoints y dirección
 - [x] **6.1** `feat(matching): add cross-checkpoint bipartite matcher` — `src/matching/cross_checkpoint.py`: empareja tracks de `camera-outside` con tracks de `camera-inside` dentro de una ventana de tiempo, reutilizando el húngaro de 3.2 con costo = distancia entre embeddings.
 - [x] **6.2** `feat(direction): resolve entry and exit by checkpoint order` — `src/direction/resolver.py`: afuera → adentro = `ENTRY`, adentro → afuera = `EXIT`.
-- [ ] **6.3** `feat(direction): add trajectory fallback for single-camera tracks` — Si solo una cámara vio a la persona, usar el deque de 3.4 para inferir la dirección (señal secundaria).
+- [x] **6.3** `feat(direction): add trajectory fallback for single-camera tracks` — Si solo una cámara vio a la persona, usar el deque de 3.4 para inferir la dirección (señal secundaria).
 - [ ] **6.4** `feat(dedup): add ttl hash set for crossings` — `src/dedup/ttl_set.py`: clase `TTLSet` que evita contar dos veces el mismo cruce.
 - [ ] **6.5** `test(direction): cover entry, exit, walking backwards and single camera` — Casos con secuencias sintéticas, incluido alguien que entra de espaldas (debe salir `ENTRY` igual).
 
