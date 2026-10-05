@@ -68,9 +68,14 @@ def main(argv: list[str] | None = None) -> int:
             logger.info("dry-run, no se envia: %s", json.dumps(event, ensure_ascii=False))
     else:
         from src.events.delivery import EventDelivery
+        from src.events.health import check_backend_health
         from src.events.retry_queue import RetryQueue
         from src.events.uploader import EventUploader
 
+        if check_backend_health(config.backend.url, config.backend.timeout_seconds):
+            logger.info("backend OK (%s)", config.backend.url)
+        else:
+            logger.warning("NO hay conexion con el backend (%s): los eventos se guardan en la cola y se envian cuando vuelva", config.backend.url)
         delivery = EventDelivery(
             RetryQueue(config.backend.retry_queue_path),
             EventUploader(config.backend.url, config.backend.shared_secret, config.backend.timeout_seconds),
