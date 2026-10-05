@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     }
     trackers = {
         camera_id: SortTracker(config.tracking.iou_threshold, config.tracking.max_age_frames,
-                               config.tracking.min_hits)
+                               config.tracking.min_hits, config.tracking.trajectory_length)
         for camera_id in config.cameras
     }
     tracks: dict[str, list[Track]] = {}

@@ -84,3 +84,30 @@ def test_returned_track_keeps_the_last_detection_with_keypoints():
     (track,) = tracker.update([detection])
     assert track.detection is detection
     assert track.detection.keypoints.shape == (NUM_KEYPOINTS, 3)
+
+
+def test_track_keeps_centroids_and_keypoints_of_each_matched_detection():
+    tracker = SortTracker(min_hits=1, trajectory_length=10)
+    for frame in range(3):
+        (track,) = tracker.update([_person(100 + 10 * frame)])
+    assert list(track.centroids) == [(125.0, 160.0), (135.0, 160.0), (145.0, 160.0)]
+    assert len(track.keypoint_history) == 3
+    assert track.keypoint_history[-1].shape == (NUM_KEYPOINTS, 3)
+
+
+def test_trajectory_is_capped_at_trajectory_length_dropping_the_oldest():
+    tracker = SortTracker(min_hits=1, trajectory_length=5)
+    for frame in range(12):
+        (track,) = tracker.update([_person(100 + 2 * frame)])
+    assert len(track.centroids) == 5
+    assert len(track.keypoint_history) == 5
+    assert track.centroids[-1] == (100 + 2 * 11 + 25.0, 160.0)
+    assert track.centroids[0] == (100 + 2 * 7 + 25.0, 160.0)
+
+
+def test_frames_without_a_detection_do_not_add_to_the_trajectory():
+    tracker = SortTracker(max_age_frames=10, min_hits=1)
+    (track,) = tracker.update([_person(100)])
+    tracker.update([])
+    tracker.update([])
+    assert len(track.centroids) == 1

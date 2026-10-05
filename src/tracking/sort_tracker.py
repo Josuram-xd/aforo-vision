@@ -1,5 +1,7 @@
 """SORT tracker: a Kalman filter per track plus Hungarian association (src/tracking/hungarian.py)."""
 
+from collections import deque
+
 import numpy as np
 
 from src.detection.yolo_pose import Detection
@@ -55,11 +57,15 @@ class KalmanBoxFilter:
 
 
 class Track:
-    """One tracked person: stable id, Kalman-filtered box and the last detection (with keypoints)."""
+    """One tracked person: stable id, Kalman-filtered box, last detection and a short motion history."""
 
-    def __init__(self, track_id: int, detection: Detection):
+    def __init__(self, track_id: int, detection: Detection, trajectory_length: int = 30):
         self.id = track_id
         self.detection = detection
+        # Observed (not predicted) centroids and keypoints of the last N matched detections, oldest first
+        self.centroids: deque[tuple[float, float]] = deque(maxlen=trajectory_length)
+        self.keypoint_history: deque[np.ndarray] = deque(maxlen=trajectory_length)
+        self._remember(detection)
         self.hits = 1  # total detections matched to this track
         self.time_since_update = 0  # frames since the last matched detection
         self.confirmed = False
@@ -77,17 +83,24 @@ class Track:
     def update(self, detection: Detection) -> None:
         self._filter.update(detection[:4])
         self.detection = detection
+        self._remember(detection)
         self.hits += 1
         self.time_since_update = 0
+
+    def _remember(self, detection: Detection) -> None:
+        self.centroids.append(((detection.x1 + detection.x2) / 2, (detection.y1 + detection.y2) / 2))
+        self.keypoint_history.append(detection.keypoints)
 
 
 class SortTracker:
     """Assigns stable ids to detections across frames. Use one instance per camera."""
 
-    def __init__(self, iou_threshold: float = 0.3, max_age_frames: int = 30, min_hits: int = 3):
+    def __init__(self, iou_threshold: float = 0.3, max_age_frames: int = 30, min_hits: int = 3,
+                 trajectory_length: int = 30):
         self.iou_threshold = iou_threshold
         self.max_age_frames = max_age_frames
         self.min_hits = min_hits
+        self.trajectory_length = trajectory_length
         self._tracks: list[Track] = []
         self._next_id = 1
 
@@ -108,7 +121,7 @@ class SortTracker:
         return [t for t in self._tracks if t.confirmed and t.time_since_update == 0]
 
     def _new_track(self, detection: Detection) -> Track:
-        track = Track(self._next_id, detection)
+        track = Track(self._next_id, detection, self.trajectory_length)
         track.confirmed = self.min_hits <= 1
         self._next_id += 1
         return track
