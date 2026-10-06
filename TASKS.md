@@ -77,7 +77,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 - [x] **7.5** `feat(main): check backend health on startup` — Llamar `GET /health` (task 2 de `aforo-backend`) al arrancar y avisar en consola si no hay conexión.
 
 ### Task 8 — Ensayo del piloto
-- [ ] **8.1** `docs: add pilot day runbook` — Checklist del día: hotspot encendido, cámaras conectadas, aviso pegado en la puerta, orden de arranque, qué hacer si algo falla.
+- [x] **8.1** `docs: add pilot day runbook` — Checklist del día: hotspot encendido, cámaras conectadas, aviso pegado en la puerta, orden de arranque, qué hacer si algo falla.
 - [ ] **8.2** (sin commit) Ensayo real en la puerta comparando contra un conteo manual.
 - [ ] **8.3** `chore(config): tune thresholds and time window from rehearsal` — Ajustar umbral de similitud y ventana entre cámaras con los datos del ensayo.
 - [ ] **8.4** (sin commit) Antes del día real, limpiar los datos del ensayo con la task 4.3 del repo `aforo-db`.
