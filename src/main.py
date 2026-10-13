@@ -66,23 +66,28 @@ def main(argv: list[str] | None = None) -> int:
         logger.info("%d estudiante(s) enrolado(s)", len(names))
 
     delivery = None
+    heartbeat_client = None
     if args.dry_run:
         def emit(event: dict) -> None:
             logger.info("dry-run, no se envia: %s", json.dumps(event, ensure_ascii=False))
     else:
         from src.events.delivery import EventDelivery
         from src.events.health import check_backend_health
+        from src.events.heartbeat import HeartbeatClient
         from src.events.retry_queue import RetryQueue
         from src.events.uploader import EventUploader
 
-        if check_backend_health(config.backend.url, config.backend.timeout_seconds):
-            logger.info("backend OK (%s)", config.backend.url)
+        if check_backend_health(config.backend.url, config.backend.supabase_key, config.backend.device_key,
+                                config.cameras, config.backend.timeout_seconds):
+            logger.info("backend OK (Supabase acepto las llaves)")
         else:
-            logger.warning("NO hay conexion con el backend (%s): los eventos se guardan en la cola y se envian cuando vuelva", config.backend.url)
+            logger.warning("NO hay conexion con Supabase o rechazo las llaves: los eventos se guardan en la cola y se envian cuando vuelva")
         delivery = EventDelivery(
             RetryQueue(config.backend.retry_queue_path),
             EventUploader(config.backend.url, config.backend.supabase_key, config.backend.device_key, config.backend.timeout_seconds),
         )
+        heartbeat_client = HeartbeatClient(config.backend.url, config.backend.supabase_key, config.backend.device_key,
+                                           config.backend.timeout_seconds)
         emit = delivery.submit
 
     # Same models and thresholds for both cameras (AGENTS.md rule 3)
@@ -110,6 +115,11 @@ def main(argv: list[str] | None = None) -> int:
         FrameGrabber(camera.source, camera.camera_id, config.capture.reconnect_interval_seconds)
         for camera in config.cameras.values()
     ]
+    heartbeat = None
+    if heartbeat_client is not None:
+        from src.events.heartbeat import HeartbeatThread
+
+        heartbeat = HeartbeatThread(heartbeat_client, {g.camera_id: (lambda g=g: g.is_connected) for g in grabbers})
     tracks: dict[str, list] = {}
     preview = PreviewWindows() if args.debug else None
     last_index: dict[str, int] = {}
@@ -118,6 +128,8 @@ def main(argv: list[str] | None = None) -> int:
         delivery.start()
     for grabber in grabbers:
         grabber.start()
+    if heartbeat is not None:
+        heartbeat.start()
     logger.info("pipeline running%s%s, Ctrl+C to stop", " (dry-run)" if args.dry_run else "",
                 " (debug preview: q/Esc to quit)" if preview else "")
 
@@ -144,6 +156,8 @@ def main(argv: list[str] | None = None) -> int:
     except KeyboardInterrupt:
         pass
     finally:
+        if heartbeat is not None:
+            heartbeat.stop()
         for grabber in grabbers:
             grabber.stop()
         if preview is not None:

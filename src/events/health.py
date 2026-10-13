@@ -1,28 +1,40 @@
-"""Startup check of aforo-backend: GET /health (public, no secret needed)."""
+"""Startup check of the Supabase connection: one camera_heartbeat per camera.
+
+Proves the network, the publishable key and the device key in one go (replaces the old GET /health).
+"""
 
 import logging
+from collections.abc import Iterable
 
 import httpx
+
+from src.events.heartbeat import HeartbeatClient
 
 logger = logging.getLogger(__name__)
 
 
-def check_backend_health(base_url: str, timeout_seconds: float = 5.0, client: httpx.Client | None = None) -> bool:
-    """True if the backend answers {"status": "ok"}. Never raises: any failure is logged and returns False.
+def check_backend_health(
+    base_url: str,
+    supabase_key: str | None,
+    device_key: str | None,
+    camera_ids: Iterable[str],
+    timeout_seconds: float = 5.0,
+    client: httpx.Client | None = None,
+) -> bool:
+    """True if every camera heartbeat was accepted. Never raises: any failure is logged and returns False.
 
-    A failed check must not stop the pipeline: events are queued on disk and sent when the backend is back.
+    Sends `online=True` because only connectivity is being checked (the grabbers have not started yet);
+    the heartbeat thread reports the real camera state afterwards. A failed check must not stop the
+    pipeline: events are queued on disk and sent when Supabase is reachable again.
     """
-    url = base_url.rstrip("/") + "/health"
-    own_client = client is None
-    client = client or httpx.Client(timeout=timeout_seconds)
     try:
-        response = client.get(url)
-        if response.status_code == 200 and response.json().get("status") == "ok":
-            return True
-        logger.warning("GET /health answered %d: %s", response.status_code, response.text[:200])
-    except (httpx.HTTPError, ValueError, AttributeError) as error:  # network, bad JSON, JSON that is not an object
-        logger.warning("GET /health failed (%s): %s", type(error).__name__, error)
+        heartbeat = HeartbeatClient(base_url, supabase_key, device_key, timeout_seconds, client)
+    except ValueError as error:
+        logger.warning("startup check skipped: %s", error)
+        return False
+    try:
+        results = [heartbeat.send(camera_id, True) for camera_id in camera_ids]
     finally:
-        if own_client:
-            client.close()
-    return False
+        if client is None:
+            heartbeat.close()
+    return bool(results) and all(results)
