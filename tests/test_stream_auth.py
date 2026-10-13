@@ -202,3 +202,5 @@ def test_constructor_requires_a_key_and_a_url():
         SupabaseAuth(PROJECT, "")
     with pytest.raises(ValueError):
         SupabaseAuth("ftp://x", PUBLISHABLE)
+    with pytest.raises(ValueError):
+        SupabaseAuth("http://proj.supabase.co", PUBLISHABLE)

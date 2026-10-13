@@ -23,6 +23,8 @@ from dataclasses import dataclass
 import httpx
 import jwt
 
+from src.config import is_secure_url
+
 logger = logging.getLogger(__name__)
 
 ROLE_ORDER = ("viewer", "teacher", "admin")  # lowest to highest
@@ -59,8 +61,8 @@ class SupabaseAuth:
         role_cache_seconds: float = ROLE_CACHE_SECONDS,
         clock: Callable[[], float] = time.monotonic,
     ):
-        if not project_url.startswith(("http://", "https://")):
-            raise ValueError("project_url must start with http:// or https://")
+        if not is_secure_url(project_url):
+            raise ValueError("project_url must be an https:// URL (http:// only for localhost)")
         if not supabase_key:
             raise ValueError("the Supabase publishable key is required (set AFORO_SUPABASE_KEY)")
         base = project_url.rstrip("/")
