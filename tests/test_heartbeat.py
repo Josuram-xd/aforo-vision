@@ -73,3 +73,34 @@ def test_thread_waits_one_interval_before_the_first_beat():
 def test_both_keys_are_required(supabase_key, device_key):
     with pytest.raises(ValueError):
         HeartbeatClient("https://proj.supabase.test", supabase_key, device_key)
+
+
+@pytest.mark.parametrize("code, delivered", [(200, True), (400, False), (401, False), (403, False), (429, False), (500, False), (503, False)])
+def test_status_codes(code, delivered):
+    assert _heartbeat(lambda r: httpx.Response(code, json={})).send("camera-outside", True) is delivered
+
+
+def test_network_errors_never_raise():
+    def down(request):
+        raise httpx.ConnectError("unreachable")
+
+    def slow(request):
+        raise httpx.ReadTimeout("timed out")
+
+    assert _heartbeat(down).send("camera-outside", True) is False
+    assert _heartbeat(slow).send("camera-outside", False) is False
+
+
+def test_refused_keys_are_logged_loudly(caplog):
+    with caplog.at_level("ERROR"):
+        _heartbeat(lambda r: httpx.Response(403)).send("camera-inside", True)
+    assert "AFORO_DEVICE_KEY" in caplog.text
+
+
+def test_keys_never_appear_in_logs(caplog):
+    echo = f"{SUPABASE_KEY} {DEVICE_KEY}"
+    with caplog.at_level("DEBUG"):
+        for code in (400, 401, 403, 429, 500):
+            _heartbeat(lambda r, c=code: httpx.Response(c, text=echo)).send("camera-outside", True)
+        _heartbeat(lambda r: (_ for _ in ()).throw(httpx.ConnectError(f"boom {echo}"))).send("camera-outside", True)
+    assert SUPABASE_KEY not in caplog.text and DEVICE_KEY not in caplog.text

@@ -162,3 +162,31 @@ def test_stop_makes_a_last_attempt_and_leaves_the_rest_on_disk(tmp_path):
     time.sleep(0.2)
     delivery.stop()
     assert len(RetryQueue(path)) == 1  # nothing lost
+
+
+def test_supabase_codes_end_to_end_through_the_real_uploader():
+    import httpx
+
+    from src.events.uploader import EventUploader
+
+    answers = iter([429, 200, 400, 403, 200])  # throttled, ok, invalid, bad key, ok after the key is fixed
+    seen = []
+
+    def handler(request):
+        seen.append(request.content)
+        return httpx.Response(next(answers), json={})
+
+    uploader = EventUploader("https://proj.supabase.test", "pub-key", "dev-key", client=httpx.Client(transport=httpx.MockTransport(handler)))
+    clock = _Clock()
+    delivery = EventDelivery(RetryQueue(":memory:"), uploader, clock=clock)
+    for n in (1, 2, 3):
+        delivery.submit(_event(n))
+
+    assert delivery.flush() == 0  # 429: nothing lost, backing off
+    assert delivery.flush() == 0  # still inside the backoff window: no request made
+    clock.now += 10
+    assert delivery.flush() == 1  # event 1 sent (200); event 2 rejected (400); event 3 refused (403)
+    assert delivery.unauthorized and len(delivery.queue) == 1 and delivery.queue.rejected_count() == 1
+    clock.now += 10
+    assert delivery.flush() == 1 and len(delivery.queue) == 0 and not delivery.unauthorized
+    assert len(seen) == 5
