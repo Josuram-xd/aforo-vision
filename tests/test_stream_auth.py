@@ -35,11 +35,11 @@ def _token(key=PRIVATE_KEY, **overrides):
     return jwt.encode(claims, key, algorithm="ES256", headers={"kid": "test"})
 
 
-def _auth(codes=("viewer",), status=200, seen=None, clock=time.monotonic, **kwargs):
+def _auth(codes=("viewer",), status=200, seen=None, clock=time.monotonic, active=True, **kwargs):
     def handler(request):
         if seen is not None:
             seen.append(request)
-        return httpx.Response(status, json=[{"roles": {"code": c}} for c in codes])
+        return httpx.Response(status, json=[{"roles": {"code": c}, "profile": {"is_active": active}} for c in codes])
 
     return SupabaseAuth(PROJECT, PUBLISHABLE, jwks_client=_Jwks(), clock=clock,
                         http_client=httpx.Client(transport=httpx.MockTransport(handler)), **kwargs)
@@ -60,8 +60,26 @@ def test_role_lookup_uses_the_users_own_jwt_and_filters_by_sub():
     _auth(seen=seen).authenticate(_bearer(token))
     request = seen[0]
     assert request.url.path == "/rest/v1/user_roles"
-    assert request.url.params["user_id"] == f"eq.{USER_ID}" and request.url.params["select"] == "roles(code)"
+    assert request.url.params["user_id"] == f"eq.{USER_ID}"
+    assert request.url.params["select"] == "roles(code),profile:profiles!user_roles_user_id_fkey(is_active)"
     assert request.headers["authorization"] == f"Bearer {token}" and request.headers["apikey"] == PUBLISHABLE
+
+
+def test_deactivated_account_is_403_even_with_a_role():
+    with pytest.raises(AuthError) as info:
+        _auth(("admin",), active=False).authenticate(_bearer(_token()))
+    assert info.value.status == 403
+
+
+def test_missing_profile_is_treated_as_deactivated():
+    def handler(request):
+        return httpx.Response(200, json=[{"roles": {"code": "admin"}}])
+
+    auth = SupabaseAuth(PROJECT, PUBLISHABLE, jwks_client=_Jwks(),
+                        http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    with pytest.raises(AuthError) as info:
+        auth.authenticate(_bearer(_token()))
+    assert info.value.status == 403
 
 
 def test_highest_role_wins_and_unknown_codes_are_ignored():
