@@ -60,7 +60,7 @@ class EventDelivery:
                 self._failures, self._retry_at, self.unauthorized = 0, 0.0, False
                 sent += 1
             elif status is SendStatus.REJECTED:
-                self.queue.reject(event["eventId"], "rejected by the backend (HTTP 4xx)")
+                self.queue.reject(event["eventId"], "rejected by Supabase (HTTP 400)")
                 logger.error("event %s set aside as rejected; %d rejected so far", event["eventId"], self.queue.rejected_count())
             else:  # FAILED or UNAUTHORIZED: keep the event and its order, wait before the next try
                 self.unauthorized = status is SendStatus.UNAUTHORIZED

@@ -81,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
             logger.warning("NO hay conexion con el backend (%s): los eventos se guardan en la cola y se envian cuando vuelva", config.backend.url)
         delivery = EventDelivery(
             RetryQueue(config.backend.retry_queue_path),
-            EventUploader(config.backend.url, config.backend.device_key, config.backend.timeout_seconds),
+            EventUploader(config.backend.url, config.backend.supabase_key, config.backend.device_key, config.backend.timeout_seconds),
         )
         emit = delivery.submit
 
