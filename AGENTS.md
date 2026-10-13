@@ -12,12 +12,14 @@ Antes de proponer cambios, lee `PRD.md` (qué debe hacer el sistema) y `ARCHITEC
 
 ## Reglas de git (obligatorias, sin excepciones)
 
-1. **Ninguna IA puede hacer commit ni push.** Ningún asistente (Claude Code, Cursor, Copilot, Codex, Gemini, etc.) ejecuta `git commit`, `git push`, `git merge`, `git rebase`, `git tag` ni `git reset`, ni crea o fusiona PRs, ni por terminal ni por herramientas MCP/API de GitHub. El agente deja los cambios en el árbol de trabajo y, si ayuda, **propone** el mensaje de commit (formato de `TASKS.md`); el commit y el push los hace siempre una persona.
-2. **Nadie puede tener `Co-Authored-By` de una IA.** Ningún commit ni PR puede incluir líneas `Co-Authored-By: Claude ...` (ni de ninguna otra IA), `noreply@anthropic.com` ni "Generated with Claude Code". Esto aplica también a las personas: si el mensaje propuesto trae esa línea, se borra antes de commitear.
-3. **Cómo se hace cumplir:**
-   - `.githooks/commit-msg` rechaza localmente esos mensajes. Actívalo una vez por clon: `git config core.hooksPath .githooks`.
+1. **Una rama por task.** Los asistentes de IA pueden hacer commit y push, pero **solo en ramas de trabajo**, nunca en `main`. Nombre de la rama: `task-<n>-<descripcion-corta>` (ej. `task-7-supabase-schema`). Si la task depende de otra que aún no está en `main`, la rama sale de la rama de esa task (PRs encadenados).
+2. **Un commit por subtarea**, con el mensaje exacto de `TASKS.md` y el sufijo `[x.y]`; en ese mismo commit se marca `[x]` en `TASKS.md`.
+3. **Prohibido para la IA:** `git merge`, `git rebase`, `git reset --hard`, `git tag`, `push --force` y push a `main`; tampoco fusionar PRs. Puede **abrir** el PR de la rama hacia `main` (o hacia la rama de la que depende); la revisión y el merge los hace siempre una persona.
+4. **Nadie puede tener `Co-Authored-By` de una IA.** Ningún commit ni PR puede incluir líneas `Co-Authored-By: Claude ...` (ni de ninguna otra IA), `noreply@anthropic.com` ni "Generated with Claude Code". El autor es el usuario configurado en git.
+5. **Cómo se hace cumplir:**
+   - `.githooks/commit-msg` rechaza localmente esos mensajes. Actívalo una vez por clon: `git config core.hooksPath .githooks`. No se usa `--no-verify`.
    - `.github/workflows/no-ai-coauthor.yml` falla en GitHub si algún commit del historial los tiene.
-   - `.claude/settings.json` desactiva la coautoría automática de Claude Code y le bloquea `git commit`/`git push`.
+   - `.claude/settings.json` desactiva la coautoría automática de Claude Code y bloquea merge, rebase, force push y push a `main`.
    No desactives ni modifiques estos tres archivos sin que el usuario lo pida explícitamente.
 
 ## Reglas para el agente
