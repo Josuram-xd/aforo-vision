@@ -10,7 +10,7 @@ PILOT_YAML = Path(__file__).resolve().parent.parent / "config" / "pilot.yaml"
 
 @pytest.fixture(autouse=True)
 def clear_env(monkeypatch):
-    for name in ("AFORO_BACKEND_URL", "AFORO_BACKEND_SECRET", "AFORO_CAMERA_OUTSIDE_SOURCE", "AFORO_CAMERA_INSIDE_SOURCE"):
+    for name in ("AFORO_BACKEND_URL", "AFORO_SUPABASE_KEY", "AFORO_DEVICE_KEY", "AFORO_BACKEND_SECRET", "AFORO_CAMERA_OUTSIDE_SOURCE", "AFORO_CAMERA_INSIDE_SOURCE"):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -43,12 +43,33 @@ def test_env_overrides_backend_url_and_camera_source(monkeypatch):
     assert config.cameras["camera-inside"].source == 1
 
 
-def test_shared_secret_comes_only_from_the_environment_and_is_never_printed(monkeypatch):
-    assert load_config(PILOT_YAML).backend.shared_secret is None
-    monkeypatch.setenv("AFORO_BACKEND_SECRET", "s3cret-value-123456")
+def test_supabase_and_device_keys_come_only_from_the_environment_and_are_never_printed(monkeypatch):
     backend = load_config(PILOT_YAML).backend
-    assert backend.shared_secret == "s3cret-value-123456"
-    assert "s3cret" not in repr(backend)
+    assert backend.supabase_key is None and backend.device_key is None
+    monkeypatch.setenv("AFORO_SUPABASE_KEY", "sb_publishable_test-value-123")
+    monkeypatch.setenv("AFORO_DEVICE_KEY", "device-key-test-value-456")
+    backend = load_config(PILOT_YAML).backend
+    assert backend.supabase_key == "sb_publishable_test-value-123"
+    assert backend.device_key == "device-key-test-value-456"
+    assert "test-value" not in repr(backend) and "test-value" not in str(load_config(PILOT_YAML))
+
+
+def test_empty_keys_count_as_missing(monkeypatch):
+    monkeypatch.setenv("AFORO_SUPABASE_KEY", "")
+    monkeypatch.setenv("AFORO_DEVICE_KEY", "")
+    backend = load_config(PILOT_YAML).backend
+    assert backend.supabase_key is None and backend.device_key is None
+
+
+def test_the_old_shared_secret_is_no_longer_read(monkeypatch):
+    monkeypatch.setenv("AFORO_BACKEND_SECRET", "old-secret")
+    assert not hasattr(load_config(PILOT_YAML).backend, "shared_secret")
+
+
+def test_keys_in_pilot_yaml_are_ignored(tmp_path, monkeypatch):
+    path = write_config(tmp_path, backend__device_key="from-yaml", backend__supabase_key="from-yaml")
+    backend = load_config(path).backend
+    assert backend.device_key is None and backend.supabase_key is None
 
 
 def test_missing_file_raises(tmp_path):

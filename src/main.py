@@ -1,7 +1,7 @@
 """Entry point for aforo-vision. Run from the repo root: python -m src.main [--debug] [--dry-run]
 
 Wires the real models, the two cameras and the event delivery around src/pipeline.py.
-Needs AFORO_BACKEND_URL and AFORO_BACKEND_SECRET unless --dry-run (events are only printed).
+Needs AFORO_BACKEND_URL, AFORO_SUPABASE_KEY and AFORO_DEVICE_KEY unless --dry-run (events are only printed).
 """
 
 import argparse
@@ -41,9 +41,12 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s",
                         datefmt="%H:%M:%S")
     config = load_config(args.config)
-    if not args.dry_run and not config.backend.shared_secret:
-        logger.error("falta AFORO_BACKEND_SECRET (el secreto con el que se desplego aforo-backend); usa --dry-run para probar sin enviar")
-        return 2
+    if not args.dry_run:
+        missing = [name for name, value in (("AFORO_SUPABASE_KEY", config.backend.supabase_key),
+                                            ("AFORO_DEVICE_KEY", config.backend.device_key)) if not value]
+        if missing:
+            logger.error("falta(n) %s (llaves de Supabase); usa --dry-run para probar sin enviar", ", ".join(missing))
+            return 2
 
     try:
         from src.identity.appearance import AppearanceExtractor
@@ -78,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
             logger.warning("NO hay conexion con el backend (%s): los eventos se guardan en la cola y se envian cuando vuelva", config.backend.url)
         delivery = EventDelivery(
             RetryQueue(config.backend.retry_queue_path),
-            EventUploader(config.backend.url, config.backend.shared_secret, config.backend.timeout_seconds),
+            EventUploader(config.backend.url, config.backend.device_key, config.backend.timeout_seconds),
         )
         emit = delivery.submit
 
