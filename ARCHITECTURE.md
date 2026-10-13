@@ -1,8 +1,12 @@
 # Architecture — aforo-vision
 
 **Repository:** `aforo-vision`
-**Last updated:** September 26, 2026
+**Last updated:** October 8, 2026
 **Scope:** One-day pilot, single classroom door, hybrid USB + WiFi cameras.
+
+> **Version 2 planned (section 10).** Events go to Supabase instead of the AWS API, with a per-classroom
+> device key and camera heartbeats. Where the pipeline runs (laptop, on-site box or free cloud VM) is
+> under evaluation (proposed ADR-007); until that decision, sections 1-9 and ADR-001 still apply.
 
 ## 1. Purpose
 
@@ -161,7 +165,7 @@ Produces the resolved event (see `aforo-backend/ARCHITECTURE.md` for the full sh
 **Decision**: Both cameras run the identical detection → pose → tracking → identity pipeline; neither camera has a "simpler" role.
 **Why**: the professor and Josuram specifically want both cameras able to independently detect identity and resist walking-backwards/hide-behind-someone tricks, so that the cross-checkpoint match has two independently reliable observations to reconcile, rather than one strong camera and one weak one.
 
-### ADR-006: Camera viewing stays on the local network, gated by the same login
+### ADR-006: Camera viewing stays on the local network, gated by the same login — login changes to Supabase in v2 (section 10.4)
 **Decision**: Logged-in users watch the cameras through `aforo-vision`'s local stream server (4.10), not through the cloud. `aforo-backend` only authenticates users (Cognito); video never reaches AWS.
 **Why**: keeps ADR-001's privacy guarantee (Ley 1581: video and identities stay on the laptop) and costs nothing; relaying video through AWS (Kinesis Video Streams, a media server on EC2) would cost money and move biometric footage to the cloud.
 **Trade-off**: the camera views only work for devices on the same network as the laptop, and the page that shows them must be served over plain HTTP from that network (e.g. the frontend running on the laptop), because a browser blocks `http://` LAN images inside an HTTPS page such as the Amplify deployment.
@@ -229,3 +233,54 @@ aforo-vision/
 ## 9. Contract with other repos
 
 See `aforo-backend/ARCHITECTURE.md` for the full shared REST contract. `aforo-vision` is a client only: it calls `POST /events` on `aforo-backend`. It does not read from `aforo-db` or `aforo-frontend` directly.
+
+**v2:** it calls the Supabase RPCs `ingest_event` and `camera_heartbeat` defined in `aforo-db` (section 10.1); still write-only, it never reads tables.
+
+## 10. Version 2 (planned)
+
+### 10.1 Event delivery to Supabase (replaces 4.9's target)
+
+`aforo-backend`'s AWS API is retired in v2 (see `aforo-backend/ARCHITECTURE.md` section 9). The uploader keeps the same event JSON, the same on-disk FIFO retry queue and the same backoff; only the destination and the keys change:
+
+| | v1 | v2 |
+|---|---|---|
+| URL | `POST <api>/events` | `POST <supabase-url>/rest/v1/rpc/ingest_event`, body `{"p_event": <event>}` |
+| Keys | `X-Aforo-Secret` (`AFORO_BACKEND_SECRET`) | `apikey` (`AFORO_SUPABASE_KEY`, publishable) + `X-Device-Key` (`AFORO_DEVICE_KEY`, per classroom) |
+| Sent | `201` / `200 duplicate` | `200` (`duplicate` true/false) |
+| Rejected (set aside) | `400` | `400` |
+| Bad keys (keep and stop) | `401`/`403` | `401`/`403` |
+| Retry later | network, 5xx, 408/425/429 | same; `429` now also means the 120 req/min limit |
+| Startup check | `GET /health` | one `camera_heartbeat` per camera (proves network + both keys) |
+
+**Camera heartbeats**: a background thread calls `rpc/camera_heartbeat(code, online)` for each camera every 30 s with the grabber's `is_connected` state, so the dashboard shows camera status live and the database opens/closes `camera_offline` alerts. It never blocks frame processing.
+
+Keys come only from environment variables (never `pilot.yaml`, never logged). `AFORO_BACKEND_URL` now holds the Supabase project URL.
+
+### 10.2 Where the pipeline runs (under evaluation — proposed ADR-007)
+
+The team wants the system to work **without Josuram's laptop**, ideally in a free cloud, with encrypted video and real-time results. Options:
+
+| Option | How | Pros | Cons |
+|---|---|---|---|
+| A. Laptop (today, ADR-001) | as now | works today, video never leaves the room | depends on a personal laptop being on |
+| B. On-site headless box | small PC / Raspberry Pi 5 next to the door, starts on boot as a service | no personal PC; video stays in the room; no internet needed for processing | hardware cost (check against the ~500.000 COP total budget, AGENTS rule 9); slower CPU than the laptop |
+| C. Free cloud VM | Oracle Cloud Always Free Ampere A1 (ARM, up to 4 OCPU / 24 GB), cameras reached through a Tailscale (WireGuard) tunnel | nothing to run on the laptop; $0 | video leaves the room (encrypted); depends on internet upload from the room; ARM CPU only; needs an Oracle account (card verification) |
+
+Notes that apply to option C:
+- **An always-on device is still needed on site.** IP cameras cannot run Tailscale themselves, so a small device on the camera network must act as a Tailscale *subnet router* (for example a Raspberry Pi or a travel router with Tailscale/WireGuard). Option C therefore removes the laptop, not the on-site hardware.
+- **Real time**: counting a door crossing needs about **5-8 FPS per camera**, not 30. YOLO26n-pose at reduced input size on 4 ARM cores should reach that for detection; face/periocular embeddings add cost per person, so groups entering together can lower FPS for a few seconds. **This must be measured (task 15.1) before deciding**; the decision criterion is ≥5 FPS per camera with two people crossing at once, and end-to-end latency (crossing → dashboard) under 3 s.
+- **Privacy and Ley 1581**: video travels only inside the encrypted tunnel to a server the team controls, is processed in memory and never written to disk or sent to third-party services. Enrollment embeddings on the server are encrypted at rest (key from an environment variable) and never stored in Supabase. The surveillance notice (`docs/aviso-videovigilancia.md`) and AGENTS rule 1 must be updated before going live.
+
+**Proposed ADR-007**: decide between B and C with the benchmark of task 15.1; whichever wins runs headless as a service (systemd on Linux) with automatic restart, no `--debug` window. Both keep the same code path; the only difference is the camera sources (`rtsp://` over the LAN vs. over the tunnel).
+
+### 10.3 CPU architecture
+
+If option C (or a Raspberry Pi) wins, the pipeline must run on **Linux ARM64**: verify wheels for `torch`, `ultralytics`, `onnxruntime`, `insightface` and `opencv-python` on ARM64 + Python 3.14 before pinning (AGENTS rule 8). ONNX Runtime for all models (YOLO exported to ONNX) is the fallback if `torch` is a problem there.
+
+### 10.4 Camera viewing and login
+
+The stream server of 4.10 validates **Supabase** JWTs (project JWKS) instead of Cognito, and reads the user's role from the token's app metadata or from `user_roles`: `viewer`/`teacher`/`admin` see plain streams, `admin` sees the analysis overlay. LAN-only stays the rule unless the team explicitly decides otherwise for option C.
+
+### 10.5 Web enrollment (pending decision)
+
+Today students are enrolled in person with `enrollment/enroll_student.py`. A web flow (the student signs up, accepts the consent text and the page captures ~10 periocular samples) is possible but sends biometric samples over the internet; it needs encrypted upload directly to the vision node (never to Supabase tables) and an updated consent form. Not planned until the team decides.

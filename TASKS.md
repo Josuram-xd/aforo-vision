@@ -24,6 +24,19 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 
 **Hito fin de septiembre:** fase A completa → modelo corriendo con la webcam del laptop (este repo, tasks 1-3) y todo lo demás desplegado aunque sea en "hola mundo".
 
+### Versión 2 (después de la primera entrega, octubre 2026)
+
+Retroalimentación del profe: pocas tablas, sin registro ni login, endpoints públicos, AWS sin protección contra abuso y un frontend muy básico. La v2 pasa los datos y el login a **Supabase** (PostgreSQL + Auth con Google + RLS + Realtime). Detalle en la sección "Version 2" de cada `ARCHITECTURE.md`.
+
+| Fase | aforo-db | aforo-backend | aforo-vision | aforo-frontend |
+|---|---|---|---|---|
+| F — Base v2 | 7 | 12.1-12.2 | — | 12 |
+| G — Login, seguridad e integración | 8 | 13 | 14 | 13 |
+| H — Producto | 9 | — | 15 (evaluar visión en la nube) | 14-15 |
+| I — Cierre | 10 | 12.3-12.4 | 15.3-15.6, 16 | 16 |
+
+Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no se borran para conservar el historial.
+
 ---
 
 ## Prioridad 1 — Crítico
@@ -89,7 +102,7 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 ### Task 9 — Envío autenticado
 > Depende de: Seguir con la task 8 del repo: `aforo-backend`
 
-- [ ] **9.1** `feat(events): send shared secret header` — Enviar el header con el secreto compartido en cada `POST /events`; leerlo de una variable de entorno, nunca de `pilot.yaml`.
+- [ ] ~~**9.1** `feat(events): send shared secret header` — Enviar el header con el secreto compartido en cada `POST /events`; leerlo de una variable de entorno, nunca de `pilot.yaml`.~~ → reemplazada por la task 14 (llaves de Supabase).
 
 ### Task 10 — Rendimiento en CPU
 - [ ] **10.1** `perf(detection): skip frames adaptively when fps drops` — Procesar 1 de cada N frames cuando los FPS bajen de un mínimo.
@@ -106,10 +119,39 @@ Pipeline local de visión (laptop): 2 cámaras → detección → tracking → i
 > Depende de: Seguir con la task 11 del repo: `aforo-backend` (User Pool de Cognito).
 
 - [ ] **12.1** `feat(stream): serve mjpeg streams on local network` — `src/stream/server.py`: `GET /stream/<cameraId>` con los frames de cada cámara, escuchando solo en la IP de la red local (configurable en `pilot.yaml`). Nunca escribe frames a disco.
-- [ ] **12.2** `feat(stream): require cognito token and group` — Validar el token de Cognito (firma con JWKS cacheado, issuer, client, expiración) y el claim `cognito:groups`: `viewer` o `dev` para ver; sin token 401, grupo incorrecto 403. IDs del User Pool por variable de entorno.
+- [ ] ~~**12.2** `feat(stream): require cognito token and group` — Validar el token de Cognito (firma con JWKS cacheado, issuer, client, expiración) y el claim `cognito:groups`: `viewer` o `dev` para ver; sin token 401, grupo incorrecto 403. IDs del User Pool por variable de entorno.~~ → se adapta a Supabase en la task 14.6.
 - [ ] **12.3** `feat(stream): add dev analysis overlay stream` — `GET /stream/<cameraId>/dev` solo para `dev`: video con cajas, ID de track, nombre + confianza, `FACE`/`BODY_ONLY`, checkpoint, dirección resuelta y FPS (reutiliza `src/debug/preview.py`).
 - [ ] **12.4** `test(stream): cover auth and group checks` — Tokens firmados con una llave de prueba: válido, expirado, sin grupo, `viewer` pidiendo `/dev` (403).
   Después sigue con la task 9 del repo: `aforo-frontend`.
 
 ### Task 13 — Pruebas con video grabado
 - [ ] **13.1** `test: replay recorded clips through the pipeline` — Test de integración con clips del ensayo (grabados con consentimiento, guardados solo en local y excluidos de git).
+
+---
+
+## Versión 2 — Supabase y dónde corre la visión
+
+> Ver `ARCHITECTURE.md` sección 10.
+
+### Task 14 — Envío a Supabase **(Prioridad 1)**
+> Depende de: `aforo-db` tasks 7 y 8.2 (proyecto, RPCs y llave del salón).
+
+- [ ] **14.1** `feat(config): read supabase url and keys from env` — `AFORO_BACKEND_URL` pasa a ser la URL del proyecto de Supabase; nuevas `AFORO_SUPABASE_KEY` (publishable) y `AFORO_DEVICE_KEY`; se elimina `AFORO_BACKEND_SECRET`. Nunca en `pilot.yaml` ni en logs.
+- [ ] **14.2** `feat(events): post events to ingest event rpc` — `EventUploader` envía `{"p_event": evento}` a `/rest/v1/rpc/ingest_event` con `apikey` y `X-Device-Key`; misma cola FIFO y mismo backoff. Mapeo de códigos de `ARCHITECTURE.md` 10.1.
+- [ ] **14.3** `feat(events): add camera heartbeat thread` — Hilo que cada 30 s llama `camera_heartbeat` por cámara con `is_connected`; al arrancar reemplaza el `GET /health` (`backend OK`).
+- [ ] **14.4** `test(events): cover supabase status codes and heartbeats` — Actualizar `test_uploader`, `test_health` y `test_config` con `httpx.MockTransport`: 200, 200 duplicado, 400, 401/403, 429, 5xx, red caída; las llaves nunca aparecen en logs.
+- [ ] **14.5** `docs: update runbook for supabase keys` — `docs/runbook-dia-piloto.md`: nuevas variables de entorno, qué significa cada error y cómo pedir/revocar la llave del salón.
+- [ ] **14.6** `feat(stream): validate supabase jwt instead of cognito` — Para la task 12: validar el JWT de Supabase (JWKS del proyecto) y el rol del usuario.
+- [ ] **14.7** (sin commit) Prueba de punta a punta: una persona cruza la puerta y el evento aparece en el dashboard v2 en menos de 3 s; apagar una cámara abre la alerta `camera_offline`.
+
+### Task 15 — Sin depender del laptop **(Prioridad 2)**
+- [ ] **15.1** (sin commit) **Benchmark:** medir FPS por cámara con 2 streams y reconocimiento activo (1 persona y 2 personas cruzando a la vez) en: el laptop, la VM gratis de Oracle (Ampere A1, 4 OCPU / 24 GB) y, si se consigue prestado, un mini PC o Raspberry Pi 5. Anotar FPS, CPU y latencia cruce → dashboard. Criterio: ≥5 FPS por cámara y < 3 s de latencia.
+- [ ] **15.2** `docs: decide where the pipeline runs (adr-007)` — Con los datos de 15.1, elegir entre equipo en el salón (opción B) y nube gratis (opción C). Si se compra hardware, revisar el presupuesto total (~500.000 COP, regla 9).
+- [ ] **15.3** `chore(deploy): add systemd service for headless run` — Arranque automático al encender, reinicio si se cae, sin ventana `--debug`; logs con `journalctl`.
+- [ ] **15.4** `docs: add tailscale tunnel setup` — Solo si gana la opción C: dispositivo en el salón como *subnet router* de Tailscale para que la VM llegue a las cámaras por un túnel cifrado (WireGuard); las cámaras nunca quedan expuestas a internet.
+- [ ] **15.5** `feat(identity): encrypt embeddings at rest` — Los embeddings del enrolamiento se guardan cifrados (llave en variable de entorno) en el equipo que procesa; nunca en Supabase.
+- [ ] **15.6** `docs: update surveillance notice and agents rule for remote processing` — Solo si gana la opción C: actualizar `docs/aviso-videovigilancia.md` (el video viaja cifrado a un servidor propio, se procesa en memoria y no se graba) y la regla 1 de `AGENTS.md`.
+- [ ] **15.7** `chore(deps): verify arm64 wheels or export models to onnx` — Si el equipo elegido es ARM64: confirmar wheels para Python 3.14; si `torch` falla, exportar YOLO a ONNX y correr todo con ONNX Runtime.
+
+### Task 16 — Enrolamiento desde la web **(Prioridad 3, pendiente de decisión)**
+- [ ] **16.1** (sin commit) Decidir con el equipo si se hace (ver `ARCHITECTURE.md` 10.5). Si no, se sigue enrolando en persona con `enroll_student.py`.

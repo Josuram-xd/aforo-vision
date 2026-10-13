@@ -80,3 +80,16 @@ Durante la sesión de un curso, en una sola puerta:
 
 - Fecha exacta del piloto y salón asignado.
 - Roster final de estudiantes que dan consentimiento informado antes del día de la prueba.
+
+## 10. Versión 2 (octubre 2026)
+
+Después de la primera entrega:
+
+1. **Destino de los eventos:** se envían a Supabase con una llave del salón que se puede revocar, en lugar del API de AWS que se retira. El JSON del evento no cambia.
+2. **Estado de las cámaras en vivo:** cada cámara reporta cada 30 s si está conectada. El dashboard lo muestra y crea una alerta si una se cae.
+3. **Que no dependa del laptop de Josuram:** se evalúan dos opciones, un equipo pequeño en el salón que arranca solo o una VM gratis en la nube (Oracle) conectada a las cámaras por un túnel cifrado. Se decide midiendo FPS y latencia reales (tasks 15.1 y 15.2).
+4. **Tiempo real:** al menos 5 FPS por cámara con reconocimiento activo y menos de 3 s entre el cruce y el dashboard.
+
+**Restricciones que se mantienen:** los datos biométricos nunca van a la base de datos ni a servicios de terceros, el video no se graba, y el presupuesto total de hardware es de ~500.000 COP.
+
+**Pregunta abierta:** ¿enrolamiento desde la web? Hoy es presencial (ver `ARCHITECTURE.md` 10.5).
