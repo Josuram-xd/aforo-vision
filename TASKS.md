@@ -136,12 +136,12 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 ### Task 14 — Envío a Supabase **(Prioridad 1)**
 > Depende de: `aforo-db` tasks 7 y 8.2 (proyecto, RPCs y llave del salón).
 
-- [ ] **14.1** `feat(config): read supabase url and keys from env` — `AFORO_BACKEND_URL` pasa a ser la URL del proyecto de Supabase; nuevas `AFORO_SUPABASE_KEY` (publishable) y `AFORO_DEVICE_KEY`; se elimina `AFORO_BACKEND_SECRET`. Nunca en `pilot.yaml` ni en logs.
-- [ ] **14.2** `feat(events): post events to ingest event rpc` — `EventUploader` envía `{"p_event": evento}` a `/rest/v1/rpc/ingest_event` con `apikey` y `X-Device-Key`; misma cola FIFO y mismo backoff. Mapeo de códigos de `ARCHITECTURE.md` 10.1.
-- [ ] **14.3** `feat(events): add camera heartbeat thread` — Hilo que cada 30 s llama `camera_heartbeat` por cámara con `is_connected`; al arrancar reemplaza el `GET /health` (`backend OK`).
-- [ ] **14.4** `test(events): cover supabase status codes and heartbeats` — Actualizar `test_uploader`, `test_health` y `test_config` con `httpx.MockTransport`: 200, 200 duplicado, 400, 401/403, 429, 5xx, red caída; las llaves nunca aparecen en logs.
-- [ ] **14.5** `docs: update runbook for supabase keys` — `docs/runbook-dia-piloto.md`: nuevas variables de entorno, qué significa cada error y cómo pedir/revocar la llave del salón.
-- [ ] **14.6** `feat(stream): validate supabase jwt instead of cognito` — Para la task 12: validar el JWT de Supabase (JWKS del proyecto) y el rol del usuario.
+- [x] **14.1** `feat(config): read supabase url and keys from env` — `AFORO_BACKEND_URL` pasa a ser la URL del proyecto de Supabase; nuevas `AFORO_SUPABASE_KEY` (publishable) y `AFORO_DEVICE_KEY`; se elimina `AFORO_BACKEND_SECRET`. Nunca en `pilot.yaml` ni en logs.
+- [x] **14.2** `feat(events): post events to ingest event rpc` — `EventUploader` envía `{"p_event": evento}` a `/rest/v1/rpc/ingest_event` con `apikey` y `X-Device-Key`; misma cola FIFO y mismo backoff. Mapeo de códigos de `ARCHITECTURE.md` 10.1.
+- [x] **14.3** `feat(events): add camera heartbeat thread` — Hilo que cada 30 s llama `camera_heartbeat` por cámara con `is_connected`; al arrancar reemplaza el `GET /health` (`backend OK`).
+- [x] **14.4** `test(events): cover supabase status codes and heartbeats` — Actualizar `test_uploader`, `test_health` y `test_config` con `httpx.MockTransport`: 200, 200 duplicado, 400, 401/403, 429, 5xx, red caída; las llaves nunca aparecen en logs.
+- [x] **14.5** `docs: update runbook for supabase keys` — `docs/runbook-dia-piloto.md`: nuevas variables de entorno, qué significa cada error y cómo pedir/revocar la llave del salón.
+- [x] **14.6** `feat(stream): validate supabase jwt instead of cognito` — Para la task 12: validar el JWT de Supabase (JWKS del proyecto) y el rol del usuario.
 - [ ] **14.7** (sin commit) Prueba de punta a punta: una persona cruza la puerta y el evento aparece en el dashboard v2 en menos de 3 s; apagar una cámara abre la alerta `camera_offline`.
 
 ### Task 15 — Sin depender del laptop **(Prioridad 2)**

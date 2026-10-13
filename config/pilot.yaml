@@ -1,9 +1,10 @@
 # Pilot configuration for aforo-vision.
 # Real secrets and production URLs do NOT go here (see AGENTS.md):
-#   AFORO_BACKEND_URL           overrides backend.url
+#   AFORO_BACKEND_URL           Supabase project URL (overrides backend.url)
 #   AFORO_CAMERA_OUTSIDE_SOURCE overrides the camera-outside source (RTSP URL with credentials)
 #   AFORO_CAMERA_INSIDE_SOURCE  overrides the camera-inside source
-#   AFORO_BACKEND_SECRET        shared secret sent in the X-Aforo-Secret header of POST /events
+#   AFORO_SUPABASE_KEY          publishable key, sent in the apikey header
+#   AFORO_DEVICE_KEY            per-classroom key, sent in the X-Device-Key header
 # Thresholds below are starting points; tune them after the rehearsal (task 8.3).
 
 cameras:
@@ -38,6 +39,6 @@ dedup:
   ttl_seconds: 10.0
 
 backend:
-  url: "http://localhost:3000"
+  url: "https://your-project-ref.supabase.co"  # placeholder: the real URL goes in AFORO_BACKEND_URL
   timeout_seconds: 5.0
   retry_queue_path: data/retry_queue.sqlite

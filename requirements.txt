@@ -23,6 +23,10 @@ onnxruntime==1.30.0
 httpx==0.28.1
 pyyaml==6.0.3
 
+# Stream server login (Supabase JWT via JWKS, ES256). Verified on PyPI 2026-10-13: latest stable; cryptography ships a cp311-abi3 wheel (works on 3.14, Windows x64).
+PyJWT==2.15.1
+cryptography==50.0.2
+
 # Tests (scipy is the reference for hungarian.py in tests/test_hungarian_vs_scipy.py)
 scipy==1.18.1
 pytest==9.1.1

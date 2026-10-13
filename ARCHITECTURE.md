@@ -279,7 +279,9 @@ If option C (or a Raspberry Pi) wins, the pipeline must run on **Linux ARM64**: 
 
 ### 10.4 Camera viewing and login
 
-The stream server of 4.10 validates **Supabase** JWTs (project JWKS) instead of Cognito, and reads the user's role from the token's app metadata or from `user_roles`: `viewer`/`teacher`/`admin` see plain streams, `admin` sees the analysis overlay. LAN-only stays the rule unless the team explicitly decides otherwise for option C.
+The stream server of 4.10 validates **Supabase** JWTs (project JWKS) instead of Cognito, and reads the user's role from `user_roles`: `viewer`/`teacher`/`admin` see plain streams, `admin` sees the analysis overlay. LAN-only stays the rule unless the team explicitly decides otherwise for option C.
+
+**Implementation (`src/stream/auth.py`, task 14.6)**: the token is verified locally against the project JWKS (`/auth/v1/.well-known/jwks.json`, ES256/RS256 only; issuer, audience `authenticated`, expiry and `sub` required; the anon and service tokens are rejected). The Supabase JWT carries no role claim (only `sub` and `role=authenticated`), so the app role is read with `GET /rest/v1/user_roles?select=roles(code)&user_id=eq.<sub>` using the **user's own JWT** plus the publishable key: row level security lets users read their own rows, so the stream server never holds a service-role key. If a user has several roles the highest wins (`admin` > `teacher` > `viewer`); the result is cached 60 s, which is also the maximum time a revoked role keeps working. Errors: no or invalid token 401, no role or role not allowed 403, JWKS or lookup unavailable 503. Requires `roles` to be readable by `authenticated` users (confirm in `aforo-db`).
 
 ### 10.5 Web enrollment (pending decision)
 

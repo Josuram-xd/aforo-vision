@@ -13,3 +13,7 @@ __pycache__/
 # Model weights downloaded at runtime
 *.pt
 *.onnx
+
+# Secrets (Supabase device key, API keys): never commit
+.env
+.env.*
