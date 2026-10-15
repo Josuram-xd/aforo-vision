@@ -133,6 +133,8 @@ Produces the resolved event (see `aforo-backend/ARCHITECTURE.md` for the full sh
 }
 ```
 
+`personName` stays in the contract but is always `null` since task 17.3: Supabase (`ingest_event`) ignores it and takes the name from `students`, so sending it only moved personal data over the internet (data minimization). The name is still shown in the local log.
+
 ### 4.9 Uploader
 - Sends the event via `POST /events` to `aforo-backend` over HTTPS.
 - If the request fails (network down), the event is pushed onto a local **FIFO retry queue** (on-disk, e.g. SQLite or a flat file) and retried with backoff until it succeeds — no event is lost to a brief connectivity gap.

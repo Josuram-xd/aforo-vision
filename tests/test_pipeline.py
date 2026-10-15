@@ -100,7 +100,8 @@ def test_entering_with_face_visible_to_both_cameras_names_the_student():
     assert len(events) == 1
     event = events[0]
     assert event["direction"] == "ENTRY" and event["method"] == "FACE"
-    assert event["personId"] == ANA_ID and event["personName"] == "Ana Pérez"
+    assert event["personId"] == ANA_ID
+    assert event["personName"] is None  # the name never leaves the machine (task 17.3)
     assert 0.9 < event["confidence"] <= 1.0
 
 

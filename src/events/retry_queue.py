@@ -4,8 +4,9 @@ Every event is written here before any send attempt, so a crash or a network dro
 Events leave in the order they were queued. The backend is idempotent by eventId, so a retry after an
 ambiguous failure (sent but the answer was lost) does not double-count.
 
-The file holds event JSON, including personName for identified students: it lives under data/,
-which is git-ignored, and is deleted with the rest of the pilot data.
+The file holds event JSON with the personId of identified students (no names since aforo-vision task 17.3;
+a queue written by an older version may still hold personName). It lives under data/, which is git-ignored,
+and is deleted with the rest of the pilot data.
 """
 
 import json
