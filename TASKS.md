@@ -160,5 +160,5 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 > Los embeddings solo existen en el equipo de visión (`data/embeddings/`), así que borrar al estudiante en el dashboard (`aforo-frontend` task 19.1) no los borra.
 
 - [x] **17.1** `feat(enrollment): add remove student script` — `python -m enrollment.remove_student --person-id <uuid>`: borra `data/embeddings/<id>.npy` y `<id>.json`, valida que el id sea un UUID (sin rutas raras) y pide confirmación. El pipeline deja de reconocerlo al reiniciar.
-- [ ] **17.2** `docs: add student erasure steps to runbook` — Runbook y formato de consentimiento: cómo se atiende una solicitud de supresión (dashboard + script) y en cuánto tiempo.
+- [x] **17.2** `docs: add student erasure steps to runbook` — Runbook y formato de consentimiento: cómo se atiende una solicitud de supresión (dashboard + script) y en cuánto tiempo.
 - [ ] **17.3** `feat(events): stop sending person name to supabase` — `ingest_event` ignora `personName` (el nombre sale de `students`), así que el nombre viajaba por internet sin necesidad. Enviar solo `personId` (minimización de datos). Contrato: `personName` pasa a ser siempre `null`; avisar a `aforo-db` y `aforo-backend`.

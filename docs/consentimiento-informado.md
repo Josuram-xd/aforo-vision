@@ -50,7 +50,7 @@ Como titular puede, en cualquier momento y sin costo:
 - Pedir **prueba de esta autorización**.
 - Presentar una queja ante la **Superintendencia de Industria y Comercio** si considera que se vulneraron sus derechos.
 
-Para ejercerlos escriba a [correo de contacto]. Si revoca, **se borrará su huella facial del laptop y su perfil de la base de datos en la nube** en un plazo máximo de [plazo, p. ej. 5 días hábiles] y se le confirmará por escrito.
+Para ejercerlos escriba a [correo de contacto]. Si revoca, **se borrará su huella facial del equipo de visión y su ficha de la base de datos en la nube, incluido su nombre en los registros de auditoría**, en un plazo máximo de [plazo, p. ej. 5 días hábiles], y se le confirmará por escrito. Sus entradas y salidas pasadas se conservan solo como conteo, sin su nombre ni ningún dato que la identifique.
 
 ## 6. Cuánto tiempo se guardan
 
