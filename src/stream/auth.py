@@ -7,8 +7,9 @@ Viewers log in with Supabase Auth; the stream server receives `Authorization: Be
 2. The role is NOT in the token (it only carries `sub` and `role=authenticated`). It is read from
    `user_roles` joined to `roles.code` with a REST call made WITH THE USER'S OWN JWT, so row level
    security decides what is visible (a user can read their own rows) and this server holds no
-   service-role key. The result is cached for a short time (default 60 s), which also bounds how long a
-   revoked role keeps working.
+   service-role key. The same request embeds `profiles.is_active`: a deactivated account can still read
+   its own role rows, so it is rejected here (403) like the database does. The result is cached for a
+   short time (default 60 s), which also bounds how long a revoked role or deactivation takes to apply.
 
 Roles: admin > teacher > viewer. viewer/teacher/admin may see plain streams; only admin sees the overlay.
 """
@@ -22,6 +23,8 @@ from dataclasses import dataclass
 import httpx
 import jwt
 
+from src.config import is_secure_url
+
 logger = logging.getLogger(__name__)
 
 ROLE_ORDER = ("viewer", "teacher", "admin")  # lowest to highest
@@ -29,6 +32,8 @@ STREAM_ROLES = frozenset(ROLE_ORDER)
 OVERLAY_ROLES = frozenset({"admin"})
 ALGORITHMS = ("ES256", "RS256")  # asymmetric only: never accept HS256 or "none"
 ROLE_CACHE_SECONDS = 60.0
+# user_roles has two foreign keys to profiles (user_id, granted_by): name the one to embed.
+ROLES_SELECT = "roles(code),profile:profiles!user_roles_user_id_fkey(is_active)"
 
 
 class AuthError(Exception):
@@ -56,8 +61,8 @@ class SupabaseAuth:
         role_cache_seconds: float = ROLE_CACHE_SECONDS,
         clock: Callable[[], float] = time.monotonic,
     ):
-        if not project_url.startswith(("http://", "https://")):
-            raise ValueError("project_url must start with http:// or https://")
+        if not is_secure_url(project_url):
+            raise ValueError("project_url must be an https:// URL (http:// only for localhost)")
         if not supabase_key:
             raise ValueError("the Supabase publishable key is required (set AFORO_SUPABASE_KEY)")
         base = project_url.rstrip("/")
@@ -117,7 +122,7 @@ class SupabaseAuth:
         try:
             response = self._http.get(
                 self._roles_url,
-                params={"select": "roles(code)", "user_id": f"eq.{user_id}"},
+                params={"select": ROLES_SELECT, "user_id": f"eq.{user_id}"},
                 headers={"apikey": self._supabase_key, "Authorization": f"Bearer {token}"},
             )
         except httpx.HTTPError as error:
@@ -129,9 +134,12 @@ class SupabaseAuth:
             logger.error("user_roles answered %d", response.status_code)
             raise AuthError(503, "role lookup unavailable")
         try:
-            role = _highest_role(response.json())
+            rows = response.json()
         except ValueError:
             raise AuthError(503, "role lookup unavailable") from None
+        if not _is_active(rows):
+            raise AuthError(403, "account deactivated")
+        role = _highest_role(rows)
         if role is None:
             raise AuthError(403, "user has no role")
         self._role_cache[cache_key] = (self._clock() + self._role_cache_seconds, role)
@@ -146,6 +154,17 @@ def _bearer(header: str | None) -> str:
     if scheme.lower() != "bearer" or not token:
         raise AuthError(401, "expected a Bearer token")
     return token
+
+
+def _is_active(rows) -> bool:
+    """Every row embeds the owner's profile; anything but is_active == True (missing, false) is inactive."""
+    if not isinstance(rows, list) or not rows:
+        return True  # no role rows: _highest_role answers 403 "user has no role"
+    for row in rows:
+        profile = row.get("profile") if isinstance(row, dict) else None
+        if not isinstance(profile, dict) or profile.get("is_active") is not True:
+            return False
+    return True
 
 
 def _highest_role(rows) -> str | None:

@@ -3,6 +3,7 @@
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -19,6 +20,21 @@ _ENV_CAMERA_SOURCE = {
 
 class ConfigError(ValueError):
     """Raised when the config file is missing fields or has invalid values."""
+
+
+_LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+
+
+def is_secure_url(url: str) -> bool:
+    """https:// anywhere; plain http:// only to this machine (local Supabase stack).
+
+    The publishable key, the device key and user JWTs travel in headers, so they must never cross the
+    network unencrypted.
+    """
+    parts = urlsplit(url)
+    if parts.scheme == "https":
+        return bool(parts.hostname)
+    return parts.scheme == "http" and parts.hostname in _LOCAL_HOSTS
 
 
 @dataclass(frozen=True)
@@ -196,8 +212,8 @@ def _parse_source(value, camera_id: str) -> int | str:
 def _parse_backend(section: dict) -> BackendConfig:
     raw = {"backend": section}
     url = os.environ.get(_ENV_BACKEND_URL) or _field(raw, "backend", "url")
-    if not isinstance(url, str) or not url.startswith(("http://", "https://")):
-        raise ConfigError(f"backend.url must start with http:// or https://, got {url!r}")
+    if not isinstance(url, str) or not is_secure_url(url):
+        raise ConfigError(f"backend.url must be an https:// URL (http:// only for localhost), got {url!r}")
     return BackendConfig(
         url=url.rstrip("/"),
         timeout_seconds=_positive_float(raw, "backend", "timeout_seconds"),

@@ -93,3 +93,14 @@ def test_rejects_non_http_backend_url(tmp_path):
     path = write_config(tmp_path, backend__url="ftp://nope")
     with pytest.raises(ConfigError):
         load_config(path)
+
+
+def test_rejects_plain_http_backend_url_outside_localhost(tmp_path):
+    path = write_config(tmp_path, backend__url="http://proj.supabase.co")
+    with pytest.raises(ConfigError):
+        load_config(path)
+
+
+def test_allows_plain_http_backend_url_on_localhost(tmp_path):
+    path = write_config(tmp_path, backend__url="http://127.0.0.1:54321")
+    assert load_config(path).backend.url == "http://127.0.0.1:54321"

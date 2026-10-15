@@ -51,7 +51,7 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 - [x] **2.1** `feat(capture): add threaded frame grabber for usb and rtsp` — `src/capture/frame_grabber.py`: clase `FrameGrabber(source, camera_id)` con un hilo por cámara y método `read_latest()`; la misma clase acepta índice USB (`0`) o URL RTSP.
 - [x] **2.2** `feat(capture): auto-reconnect dropped streams` — Si la cámara WiFi se cae, reintentar la conexión cada N segundos sin tumbar el programa.
 - [x] **2.3** `feat(debug): add local preview window with fps overlay` — Ventana `cv2.imshow` por cámara con FPS y cajas dibujadas; se activa con un flag `--debug`.
-- [ ] **2.4** (sin commit) Verificar **antes de comprar** que la cámara WiFi exponga RTSP u ONVIF en red local. Presupuesto total del proyecto: ~500.000 COP.
+- [ ] **2.4** (sin commit) Verificar **antes de comprar** que la cámara WiFi exponga RTSP u ONVIF en red local. Presupuesto total del proyecto: ~500.000 COP. **(v2)** Si gana la opción C (task 15.2), comprobar también que el stream llegue a la VM por el túnel de Tailscale (task 15.4).
 
 ### Task 3 — Detección y tracking **[HITO SEPT]**
 - [x] **3.1** `feat(detection): add yolo26n-pose detector wrapper` — `src/detection/yolo_pose.py`: función `detect(frame) -> list[Detection]` con caja, score y keypoints.
@@ -91,9 +91,9 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 
 ### Task 8 — Ensayo del piloto
 - [x] **8.1** `docs: add pilot day runbook` — Checklist del día: hotspot encendido, cámaras conectadas, aviso pegado en la puerta, orden de arranque, qué hacer si algo falla.
-- [ ] **8.2** (sin commit) Ensayo real en la puerta comparando contra un conteo manual.
+- [ ] **8.2** (sin commit) Ensayo real en la puerta comparando contra un conteo manual. **(v2)** Hacerlo después de la task 14.7, ya enviando a Supabase y mirando el dashboard v2.
 - [ ] **8.3** `chore(config): tune thresholds and time window from rehearsal` — Ajustar umbral de similitud y ventana entre cámaras con los datos del ensayo.
-- [ ] **8.4** (sin commit) Antes del día real, limpiar los datos del ensayo con la task 4.3 del repo `aforo-db`.
+- [ ] **8.4** (sin commit) Antes del día real, limpiar los datos del ensayo con `scripts/reset_pilot_supabase.py` del repo `aforo-db` (task 8.3; el `reset_pilot.py` de la task 4.3 era de DynamoDB y se elimina en la task 10.3).
 
 ---
 
@@ -105,24 +105,24 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 - [ ] ~~**9.1** `feat(events): send shared secret header` — Enviar el header con el secreto compartido en cada `POST /events`; leerlo de una variable de entorno, nunca de `pilot.yaml`.~~ → reemplazada por la task 14 (llaves de Supabase).
 
 ### Task 10 — Rendimiento en CPU
-- [ ] **10.1** `perf(detection): skip frames adaptively when fps drops` — Procesar 1 de cada N frames cuando los FPS bajen de un mínimo.
-- [ ] **10.2** `perf(identity): cache embedding per track until matched` — No recalcular el embedding facial en cada frame una vez el track ya tiene identidad.
+- [ ] **10.1** `perf(detection): skip frames adaptively when fps drops` — Procesar 1 de cada N frames cuando los FPS bajen de un mínimo. **(v2)** Hacerla antes del benchmark de la task 15.1.
+- [ ] **10.2** `perf(identity): cache embedding per track until matched` — No recalcular el embedding facial en cada frame una vez el track ya tiene identidad. **(v2)** Hacerla antes del benchmark de la task 15.1.
 
 ### Task 11 — Registro para el informe
-- [ ] **11.1** `feat(logging): log each decision to local csv` — Un CSV local con cada evento, método (`FACE`/`BODY_ONLY`) y confianza, sin imágenes, para las métricas del informe.
+- [ ] ~~**11.1** `feat(logging): log each decision to local csv` — Un CSV local con cada evento, método (`FACE`/`BODY_ONLY`) y confianza, sin imágenes, para las métricas del informe.~~ → innecesaria en v2: la tabla `events` de Supabase ya guarda `method` y `confidence`, y la Edge Function `export-events` (`aforo-backend` task 13.1) los descarga en CSV.
 
 ---
 
 ## Prioridad 3 — Extras
 
 ### Task 12 — Vista en vivo para la demo
-> Depende de: Seguir con la task 11 del repo: `aforo-backend` (User Pool de Cognito).
+> Depende de: la task 14.6 (login con el JWT de Supabase, ya hecha en `src/stream/auth.py`) y la decisión de la task 15.2 (dónde corre el pipeline).
 
-- [ ] **12.1** `feat(stream): serve mjpeg streams on local network` — `src/stream/server.py`: `GET /stream/<cameraId>` con los frames de cada cámara, escuchando solo en la IP de la red local (configurable en `pilot.yaml`). Nunca escribe frames a disco.
+- [ ] **12.1** `feat(stream): serve mjpeg streams on local network` — `src/stream/server.py`: `GET /stream/<cameraId>` con los frames de cada cámara, escuchando solo en la IP de la red local (configurable en `pilot.yaml`). Nunca escribe frames a disco. Exige login con `src/stream/auth.py` (roles `viewer`, `teacher` o `admin`; sin token 401, sin rol o cuenta desactivada 403) e incluye tests de las rutas. Si gana la opción C (task 15.2), el servidor queda en la VM y solo se expone por Tailscale, nunca a internet.
 - [ ] ~~**12.2** `feat(stream): require cognito token and group` — Validar el token de Cognito (firma con JWKS cacheado, issuer, client, expiración) y el claim `cognito:groups`: `viewer` o `dev` para ver; sin token 401, grupo incorrecto 403. IDs del User Pool por variable de entorno.~~ → se adapta a Supabase en la task 14.6.
-- [ ] **12.3** `feat(stream): add dev analysis overlay stream` — `GET /stream/<cameraId>/dev` solo para `dev`: video con cajas, ID de track, nombre + confianza, `FACE`/`BODY_ONLY`, checkpoint, dirección resuelta y FPS (reutiliza `src/debug/preview.py`).
-- [ ] **12.4** `test(stream): cover auth and group checks` — Tokens firmados con una llave de prueba: válido, expirado, sin grupo, `viewer` pidiendo `/dev` (403).
-  Después sigue con la task 9 del repo: `aforo-frontend`.
+- [ ] **12.3** `feat(stream): add dev analysis overlay stream` — `GET /stream/<cameraId>/dev` solo para `admin` (`OVERLAY_ROLES` de `src/stream/auth.py`; el grupo `dev` de Cognito ya no existe): video con cajas, ID de track, nombre + confianza, `FACE`/`BODY_ONLY`, checkpoint, dirección resuelta y FPS (reutiliza `src/debug/preview.py`).
+- [ ] ~~**12.4** `test(stream): cover auth and group checks` — Tokens firmados con una llave de prueba: válido, expirado, sin grupo, `viewer` pidiendo `/dev` (403).~~ → cubierta por `tests/test_stream_auth.py` (task 14.6); los tests de las rutas van en la 12.1.
+  Después sigue con la task 17 del repo: `aforo-frontend` (video en vivo).
 
 ### Task 13 — Pruebas con video grabado
 - [ ] **13.1** `test: replay recorded clips through the pipeline` — Test de integración con clips del ensayo (grabados con consentimiento, guardados solo en local y excluidos de git).
