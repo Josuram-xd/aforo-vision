@@ -155,3 +155,10 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 
 ### Task 16 — Enrolamiento desde la web **(Prioridad 3, pendiente de decisión)**
 - [ ] **16.1** (sin commit) Decidir con el equipo si se hace (ver `ARCHITECTURE.md` 10.5). Si no, se sigue enrolando en persona con `enroll_student.py`.
+
+### Task 17 — Borrar la biometría de un estudiante **(Prioridad 1)**
+> Los embeddings solo existen en el equipo de visión (`data/embeddings/`), así que borrar al estudiante en el dashboard (`aforo-frontend` task 19.1) no los borra.
+
+- [x] **17.1** `feat(enrollment): add remove student script` — `python -m enrollment.remove_student --person-id <uuid>`: borra `data/embeddings/<id>.npy` y `<id>.json`, valida que el id sea un UUID (sin rutas raras) y pide confirmación. El pipeline deja de reconocerlo al reiniciar.
+- [x] **17.2** `docs: add student erasure steps to runbook` — Runbook y formato de consentimiento: cómo se atiende una solicitud de supresión (dashboard + script) y en cuánto tiempo.
+- [x] **17.3** `feat(events): stop sending person name to supabase` — `ingest_event` ignora `personName` (el nombre sale de `students`), así que el nombre viajaba por internet sin necesidad. Enviar solo `personId` (minimización de datos). Contrato: `personName` pasa a ser siempre `null`; avisar a `aforo-db` y `aforo-backend`.

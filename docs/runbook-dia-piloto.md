@@ -105,3 +105,16 @@ Si no se puede resolver en ~10 min: seguir con el **conteo manual** como respald
 - **Pedirla**: un usuario `admin` del dashboard la genera (o la crea en `aforo-db`, task 8.2) y te la entrega por un canal privado (mensaje directo, no un grupo ni un correo reenviado). Se muestra una sola vez: guárdala en un gestor de contraseñas o en el `.env` local.
 - **Revocarla** (laptop perdido, llave expuesta por error en un chat o commit): el `admin` la revoca en `aforo-db` y genera una nueva. Desde ese momento la anterior recibe 403. Después de revocar, actualiza `AFORO_DEVICE_KEY` en cada equipo y reinicia `python -m src.main`; la cola conserva lo pendiente.
 - Si una llave se filtró, revócala primero y avisa después; no esperes a confirmar el uso indebido.
+
+### 6.1 Atender una solicitud de supresión (alguien revoca su autorización)
+
+Plazo: el que diga la autorización firmada (sección 5 de `docs/consentimiento-informado.md`). Hay que hacer **los dos pasos**: uno borra los datos de la nube y el otro la biometría de este equipo.
+
+1. **Nube (dashboard):** un `admin` entra a **Estudiantes**, busca a la persona y pulsa **Eliminar**. Para confirmar hay que escribir su nombre. Se borran su ficha, sus inscripciones y su asistencia, y su nombre, correo y código desaparecen también de la auditoría. Sus entradas y salidas pasadas quedan sin nombre, así que el conteo de aforo no cambia. El diálogo muestra el `personId`: cópialo para el paso 2.
+2. **Este equipo:** con el pipeline detenido, corre:
+   ```powershell
+   python -m enrollment.remove_student --person-id <personId>
+   ```
+   Escribe `BORRAR` para confirmar. El script borra `data/embeddings/<personId>.npy` y `.json`, y quita a la persona de `data/roster.json`. Después vuelve a arrancar `python -m src.main`: desde ese momento ya no se la reconoce, y si cruza la puerta cuenta como no identificada.
+3. Si hay copias del roster fuera de `data/` (por ejemplo, `aforo-db/scripts/roster.json`), bórralas o vuelve a exportarlas con `python -m enrollment.export_roster`.
+4. Confirma por escrito a la persona que sus datos se borraron, con la fecha. Guarda esa confirmación junto a las autorizaciones firmadas (nunca en el repo).

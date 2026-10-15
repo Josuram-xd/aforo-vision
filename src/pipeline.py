@@ -175,10 +175,13 @@ class Pipeline:
     def _emit(self, direction: str, method: str, confidence: float, timestamp: float, person_id: str | None) -> None:
         if person_id and not self.dedup.add(("person", person_id, direction)):
             return  # same student, same direction, moments ago: a fragment of the same crossing
-        event = build_event(direction, method, max(0.0, min(confidence, 1.0)), timestamp,
-                            person_id=person_id, person_name=self.names.get(person_id) if person_id else None)
+        # Only personId leaves this machine: Supabase takes the name from its own students table, so sending
+        # it would move personal data over the internet for nothing (data minimization). The name stays in the
+        # local log, which never leaves the laptop.
+        event = build_event(direction, method, max(0.0, min(confidence, 1.0)), timestamp, person_id=person_id)
+        name = self.names.get(person_id) if person_id else None
         logger.info("%s %s (%s, confidence %.2f)%s", direction, event["method"], event["timestamp"], event["confidence"],
-                    f" -> {event['personName']}" if event["personName"] else "")
+                    f" -> {name}" if name else "")
         self.emit(event)
 
 
