@@ -162,3 +162,8 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 - [x] **17.1** `feat(enrollment): add remove student script` — `python -m enrollment.remove_student --person-id <uuid>`: borra `data/embeddings/<id>.npy` y `<id>.json`, valida que el id sea un UUID (sin rutas raras) y pide confirmación. El pipeline deja de reconocerlo al reiniciar.
 - [x] **17.2** `docs: add student erasure steps to runbook` — Runbook y formato de consentimiento: cómo se atiende una solicitud de supresión (dashboard + script) y en cuánto tiempo.
 - [x] **17.3** `feat(events): stop sending person name to supabase` — `ingest_event` ignora `personName` (el nombre sale de `students`), así que el nombre viajaba por internet sin necesidad. Enviar solo `personId` (minimización de datos). Contrato: `personName` pasa a ser siempre `null`; avisar a `aforo-db` y `aforo-backend`.
+
+### Task 18 — Registro de rostros desde la web **(Prioridad 1)**
+> Depende de: `aforo-db` task 12 (RPCs `pending_enrollments` y `complete_enrollment`) y `aforo-frontend` task 21.
+
+- [x] **18.1** `feat(enrollment): add script to enroll students from web photos` — `python -m enrollment.sync_web_enrollments [--watch]`: pide las fotos pendientes con la llave de dispositivo, calcula el embedding periocular en local (mínimo 3 fotos con un solo rostro), lo guarda en `data/embeddings/<studentId>.npy` y llama a `complete_enrollment`, que borra las fotos en la nube. Si fallan, marca el registro como fallido. Excepción documentada a la regla 1 de `AGENTS.md`.
