@@ -1,9 +1,10 @@
+import os
 from pathlib import Path
 
 import pytest
 import yaml
 
-from src.config import ConfigError, load_config
+from src.config import ConfigError, load_config, load_dotenv
 
 PILOT_YAML = Path(__file__).resolve().parent.parent / "config" / "pilot.yaml"
 
@@ -104,3 +105,34 @@ def test_rejects_plain_http_backend_url_outside_localhost(tmp_path):
 def test_allows_plain_http_backend_url_on_localhost(tmp_path):
     path = write_config(tmp_path, backend__url="http://127.0.0.1:54321")
     assert load_config(path).backend.url == "http://127.0.0.1:54321"
+
+
+def test_load_dotenv_reads_file_without_overriding_the_environment(tmp_path, monkeypatch):
+    env_file = tmp_path / ".env"
+    env_file.write_text('# comment\nAFORO_DEVICE_KEY="from-file"\nAFORO_SUPABASE_KEY=sb-file\n\nbad line\n', encoding="utf-8")
+    monkeypatch.setenv("AFORO_SUPABASE_KEY", "from-shell")
+    load_dotenv(env_file)
+    assert os.environ["AFORO_DEVICE_KEY"] == "from-file"
+    assert os.environ["AFORO_SUPABASE_KEY"] == "from-shell"
+    monkeypatch.delenv("AFORO_DEVICE_KEY")
+
+
+def test_load_dotenv_ignores_a_missing_file(tmp_path):
+    load_dotenv(tmp_path / "nope.env")
+
+
+@pytest.mark.parametrize("name", ["AFORO_SUPABASE_KEY", "AFORO_DEVICE_KEY", "AFORO_BACKEND_URL"])
+@pytest.mark.parametrize("value", ["<llave del salón>", "con espacio", "clavé"])
+def test_placeholder_or_non_ascii_values_are_rejected_without_echoing_them(tmp_path, monkeypatch, name, value):
+    monkeypatch.setenv(name, value)
+    with pytest.raises(ConfigError) as exc:
+        load_config(write_config(tmp_path))
+    assert name in str(exc.value) and value not in str(exc.value)
+
+
+def test_main_returns_2_on_placeholder_key(monkeypatch):
+    from src import main as main_module
+
+    monkeypatch.setattr(main_module, "load_dotenv", lambda: None)
+    monkeypatch.setenv("AFORO_DEVICE_KEY", "<llave del salón>")
+    assert main_module.main(["--dry-run"]) == 2

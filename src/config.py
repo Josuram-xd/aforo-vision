@@ -25,6 +25,25 @@ class ConfigError(ValueError):
 _LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
+def load_dotenv(path: str | Path | None = None) -> None:
+    """Load KEY=VALUE lines from the repo-root .env into os.environ without overriding existing variables.
+
+    shortcut: no `export` prefix, no multiline values, no inline comments; use python-dotenv if that is needed.
+    """
+    path = Path(path) if path else Path(__file__).resolve().parent.parent / ".env"
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        os.environ.setdefault(name.strip(), value)
+
+
 def is_secure_url(url: str) -> bool:
     """https:// anywhere; plain http:// only to this machine (local Supabase stack).
 
@@ -210,15 +229,23 @@ def _parse_source(value, camera_id: str) -> int | str:
     raise ConfigError(f"cameras.{camera_id}.source must be a USB index or URL, got {value!r}")
 
 
+def _env_value(name: str) -> str | None:
+    """Read an env var; reject example text (non-ASCII, whitespace, leading "<") without echoing the value."""
+    value = os.environ.get(name)
+    if value and (not value.isascii() or any(c.isspace() for c in value) or value.startswith("<")):
+        raise ConfigError(f"{name} parece un texto de ejemplo (tiene tildes, espacios o empieza con '<'); pon el valor real en .env")
+    return value or None
+
+
 def _parse_backend(section: dict) -> BackendConfig:
     raw = {"backend": section}
-    url = os.environ.get(_ENV_BACKEND_URL) or _field(raw, "backend", "url")
+    url = _env_value(_ENV_BACKEND_URL) or _field(raw, "backend", "url")
     if not isinstance(url, str) or not is_secure_url(url):
         raise ConfigError(f"backend.url must be an https:// URL (http:// only for localhost), got {url!r}")
     return BackendConfig(
         url=url.rstrip("/"),
         timeout_seconds=_positive_float(raw, "backend", "timeout_seconds"),
         retry_queue_path=Path(_field(raw, "backend", "retry_queue_path")),
-        supabase_key=os.environ.get(_ENV_SUPABASE_KEY) or None,
-        device_key=os.environ.get(_ENV_DEVICE_KEY) or None,
+        supabase_key=_env_value(_ENV_SUPABASE_KEY),
+        device_key=_env_value(_ENV_DEVICE_KEY),
     )

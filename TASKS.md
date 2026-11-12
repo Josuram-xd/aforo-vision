@@ -172,3 +172,8 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 > Depende de: `aforo-db` task 14 (RPC `camera_sources`) y `aforo-frontend` task 24.
 
 - [x] **19.1** `feat(capture): read camera connections registered in the web app` — Al arrancar y en cada reconexión, `FrameGrabber` pide la IP y cuenta de cada Tapo con la llave del salón y arma `rtsp://...:554/stream1`. Orden: variable `AFORO_CAMERA_*_SOURCE` > web > `pilot.yaml`. Cambiar la IP en la web se aplica solo, sin reiniciar. Excepción: la clave de la cámara viaja cifrada desde Supabase, solo por HTTPS.
+
+### Task 20 — Cargar `.env` y validar llaves **(Prioridad 1)**
+
+- [x] **20.1** `feat(config): load aforo-vision .env on startup` — `main()` lee `.env` de la raíz del repo (parser propio, sin dependencias) sin pisar variables ya definidas en el entorno.
+- [x] **20.2** `fix(config): reject placeholder or non-ascii keys with a clear message` — Si una llave tiene caracteres no ASCII, espacios o empieza con `<`, se falla con un mensaje en español que nombra la variable (nunca el valor) y `main()` devuelve 2 sin traceback.
