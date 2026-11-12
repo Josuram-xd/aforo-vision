@@ -176,4 +176,4 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 ### Task 20 — Cargar `.env` y validar llaves **(Prioridad 1)**
 
 - [x] **20.1** `feat(config): load aforo-vision .env on startup` — `main()` lee `.env` de la raíz del repo (parser propio, sin dependencias) sin pisar variables ya definidas en el entorno.
-- [ ] **20.2** `fix(config): reject placeholder or non-ascii keys with a clear message` — Si una llave tiene caracteres no ASCII, espacios o empieza con `<`, se falla con un mensaje en español que nombra la variable (nunca el valor) y `main()` devuelve 2 sin traceback.
+- [x] **20.2** `fix(config): reject placeholder or non-ascii keys with a clear message` — Si una llave tiene caracteres no ASCII, espacios o empieza con `<`, se falla con un mensaje en español que nombra la variable (nunca el valor) y `main()` devuelve 2 sin traceback.

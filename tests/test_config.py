@@ -119,3 +119,20 @@ def test_load_dotenv_reads_file_without_overriding_the_environment(tmp_path, mon
 
 def test_load_dotenv_ignores_a_missing_file(tmp_path):
     load_dotenv(tmp_path / "nope.env")
+
+
+@pytest.mark.parametrize("name", ["AFORO_SUPABASE_KEY", "AFORO_DEVICE_KEY", "AFORO_BACKEND_URL"])
+@pytest.mark.parametrize("value", ["<llave del salón>", "con espacio", "clavé"])
+def test_placeholder_or_non_ascii_values_are_rejected_without_echoing_them(tmp_path, monkeypatch, name, value):
+    monkeypatch.setenv(name, value)
+    with pytest.raises(ConfigError) as exc:
+        load_config(write_config(tmp_path))
+    assert name in str(exc.value) and value not in str(exc.value)
+
+
+def test_main_returns_2_on_placeholder_key(monkeypatch):
+    from src import main as main_module
+
+    monkeypatch.setattr(main_module, "load_dotenv", lambda: None)
+    monkeypatch.setenv("AFORO_DEVICE_KEY", "<llave del salón>")
+    assert main_module.main(["--dry-run"]) == 2
