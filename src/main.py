@@ -12,7 +12,7 @@ from pathlib import Path
 
 from enrollment.enroll_student import EMBEDDINGS_DIR
 from src.capture.frame_grabber import FrameGrabber
-from src.config import load_config
+from src.config import load_config, load_dotenv
 from src.dedup.ttl_set import TTLSet
 from src.debug.preview import Annotation, PreviewWindows
 from src.detection.yolo_pose import YoloPoseDetector
@@ -40,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s",
                         datefmt="%H:%M:%S")
+    load_dotenv()
     config = load_config(args.config)
     if not args.dry_run:
         missing = [name for name, value in (("AFORO_SUPABASE_KEY", config.backend.supabase_key),

@@ -25,6 +25,25 @@ class ConfigError(ValueError):
 _LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
+def load_dotenv(path: str | Path | None = None) -> None:
+    """Load KEY=VALUE lines from the repo-root .env into os.environ without overriding existing variables.
+
+    shortcut: no `export` prefix, no multiline values, no inline comments; use python-dotenv if that is needed.
+    """
+    path = Path(path) if path else Path(__file__).resolve().parent.parent / ".env"
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        os.environ.setdefault(name.strip(), value)
+
+
 def is_secure_url(url: str) -> bool:
     """https:// anywhere; plain http:// only to this machine (local Supabase stack).
 
