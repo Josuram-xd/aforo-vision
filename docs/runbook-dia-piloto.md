@@ -21,7 +21,7 @@ Checklist para operar `aforo-vision` el día de la prueba. Todos los comandos se
 - [ ] **Aviso pegado en la puerta**, a la altura de los ojos y **antes** de la zona que ven las cámaras.
 - [ ] **Hotspot del celular encendido** (no usar el WiFi institucional: suele aislar dispositivos entre sí). Anota el nombre y la clave.
 - [ ] Laptop conectado al hotspot.
-- [ ] **Cámara WiFi (afuera, pasillo)** encendida y conectada al mismo hotspot. Confirma su IP y que coincida con la de `AFORO_CAMERA_OUTSIDE_SOURCE` (si el hotspot le asignó otra IP, corrige la variable).
+- [ ] **Cámara WiFi (afuera, pasillo)** encendida y conectada al mismo hotspot. Confirma su IP y que coincida con la registrada en la web (Cámaras); si el hotspot le asignó otra IP, edítala ahí (se aplica sin reiniciar).
 - [ ] **Cámara USB (adentro, junto al laptop)** conectada al laptop.
 - [ ] Encuadre: cada cámara ve a la persona de cuerpo casi completo y la zona de los ojos es visible; sin contraluz fuerte de la puerta o ventana. Las dos cubren la misma puerta, una por cada lado.
 - [ ] Cables asegurados con cinta para que nadie los jale.
@@ -34,7 +34,7 @@ PowerShell, en la misma terminal donde se va a arrancar el sistema:
 $env:AFORO_BACKEND_URL = "https://<ref-del-proyecto>.supabase.co"   # URL del proyecto de Supabase
 $env:AFORO_SUPABASE_KEY = "<llave-publishable>"                     # sb_publishable_..., la misma del frontend
 $env:AFORO_DEVICE_KEY = "<llave-del-salon>"                         # una por salón, se pide al admin (sección 5.1)
-$env:AFORO_CAMERA_OUTSIDE_SOURCE = "rtsp://<usuario>:<clave>@<ip-camara>:554/stream1"
+# La cámara WiFi se configura en la web (Cámaras): NO definas AFORO_CAMERA_OUTSIDE_SOURCE, pisaría la web.
 # La cámara de adentro (USB) usa el índice 0 de config/pilot.yaml; solo cámbialo si Windows la numera distinto.
 ```
 
@@ -80,7 +80,8 @@ $env:AFORO_CAMERA_OUTSIDE_SOURCE = "rtsp://<usuario>:<clave>@<ip-camara>:554/str
 | `ingest_event answered 5xx` / `failed (ConnectError...)` | Supabase o la red caídos. No hacer nada: reintenta con espera creciente (1 s hasta 60 s). |
 | El dashboard muestra una cámara `offline` o abre la alerta `camera_offline` | Cada 30 s el sistema reporta si cada cámara está conectada. Revisar la cámara (fila "Una cámara aparece desconectada", abajo). Si las dos aparecen offline pero el video funciona, revisar las llaves o la red: los latidos no están llegando. |
 | Se cae internet durante la sesión | No hacer nada: los eventos quedan en cola y se reenvían solos. Al cerrar, la consola indica cuántos quedaron en cola; reiniciar con red para vaciarla. |
-| Una cámara aparece desconectada / ventana en negro | El sistema reintenta solo cada 5 s. Si no vuelve: USB → desconectar y reconectar el cable; WiFi → revisar que siga en el hotspot y su IP (puede haber cambiado; actualizar `AFORO_CAMERA_OUTSIDE_SOURCE` y reiniciar). |
+| Una cámara aparece desconectada / ventana en negro | El sistema reintenta solo cada 5 s. Si no vuelve: USB → desconectar y reconectar el cable; WiFi → revisar que siga en el hotspot y su IP (puede haber cambiado; editarla en la web, sin reiniciar). |
+| La cámara sigue sin conexión en la web | (1) `aforo-vision` no está corriendo; (2) el laptop está en otra red o el WiFi aísla clientes: probar el RTSP con VLC (`rtsp://usuario:clave@ip:554/stream1`); (3) cuenta de cámara (Tapo) mal escrita; (4) llave del salón rechazada (ver fila de 401/403); (5) una variable `AFORO_CAMERA_*_SOURCE` pisa la web: quitarla. |
 | La cámara WiFi no aparece en el hotspot | Reiniciarla (desconectar corriente 10 s). Confirmar que el hotspot esté en 2.4 GHz, si la cámara no soporta 5 GHz. |
 | FPS muy bajos / el video va con retraso | Cerrar otros programas, quitar `--debug` si está activo y conectar el laptop a la corriente. |
 | Todos los eventos salen sin nombre | Revisar que el log inicial indique estudiantes enrolados y que haya luz suficiente en la zona de los ojos. El conteo sigue funcionando por apariencia corporal. |

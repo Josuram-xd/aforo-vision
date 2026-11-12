@@ -71,9 +71,23 @@ Los secretos nunca van en `config/pilot.yaml` ni en git. En PowerShell:
 $env:AFORO_BACKEND_URL = "https://<ref>.supabase.co"          # URL del proyecto de Supabase
 $env:AFORO_SUPABASE_KEY = "<publishable key>"                  # sb_publishable_...
 $env:AFORO_DEVICE_KEY = "<llave del salón>"                     # la crea un admin (aforo-db, scripts/create_device_key.py)
-$env:AFORO_CAMERA_OUTSIDE_SOURCE = "rtsp://<usuario>:<clave>@<ip>:554/stream1"
-$env:AFORO_CAMERA_INSIDE_SOURCE = "0"                           # índice USB o URL RTSP
+# Opcionales: fuerzan la fuente de la cámara y PISAN lo configurado en la web (ver abajo)
+# $env:AFORO_CAMERA_OUTSIDE_SOURCE = "rtsp://<usuario>:<clave>@<ip>:554/stream1"
+# $env:AFORO_CAMERA_INSIDE_SOURCE = "0"                         # índice USB o URL RTSP
 ```
+
+Orden de prioridad de la fuente de cada cámara: variable `AFORO_CAMERA_*_SOURCE` > configuración de la web > `config/pilot.yaml`.
+
+### Conectar las cámaras desde la web
+
+Para una cámara WiFi Tapo C200 ya no hace falta poner la URL RTSP a mano:
+
+1. En la app Tapo: Configuración de la cámara → Avanzado → **Cuenta de cámara**; crea usuario y contraseña. Anota también la **IP** de la cámara.
+2. En la web (admin): Cámaras (o Configuración → Cámaras) → Agregar/Conectar; captura la IP y esa cuenta de cámara.
+3. Arranca `aforo-vision` en la misma red WiFi que la cámara. Descarga la configuración con la llave del salón (RPC `camera_sources`), arma `rtsp://usuario:clave@ip:554/stream1` y la cámara pasa a "En línea" con su primer latido.
+4. Quita `AFORO_CAMERA_*_SOURCE` del entorno; si no, esa variable pisa lo de la web.
+
+Si la IP cambia, edítala en la web: se aplica sin reiniciar.
 
 ### Enrolar estudiantes
 

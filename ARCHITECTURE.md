@@ -89,6 +89,7 @@ This repo does **not** talk to a database and does **not** serve a UI. It is a p
 ### 4.1 Frame Grabber
 - Wraps `cv2.VideoCapture`. Both camera types (USB index, RTSP/MJPEG URL) produce identical BGR numpy frames — no special-casing downstream.
 - Runs each camera on its own thread to avoid blocking on frame reads.
+- **Source resolution**: `AFORO_CAMERA_*_SOURCE` env var > web configuration > `config/pilot.yaml`. The web config (IP + Tapo "camera account") is fetched via the `camera_sources` RPC (`src/capture/cloud_sources.py`), authenticated with the classroom device key only; the password travels encrypted from Supabase Vault over HTTPS and the RTSP URL is built locally. An IP change in the web applies without restart. Video still never leaves the machine.
 
 ### 4.2 Detection + Pose
 - **Model**: YOLO26n-pose (Ultralytics), NMS-free, chosen for CPU inference speed (laptop has no dedicated GPU) and built-in keypoints (used for pose-based occlusion handling and the trajectory fallback signal).
