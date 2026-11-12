@@ -4,6 +4,7 @@ import logging
 import sys
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import cv2
@@ -47,8 +48,11 @@ class FrameGrabber:
     instead of crashing the program.
     """
 
-    def __init__(self, source: int | str, camera_id: str, reconnect_interval_seconds: float = 5.0):
+    def __init__(self, source: int | str, camera_id: str, reconnect_interval_seconds: float = 5.0,
+                 refresh_source: Callable[[], int | str | None] | None = None):
         self.source = source
+        # Called before every (re)connect attempt so a camera edited in the web is picked up without a restart
+        self._refresh_source = refresh_source
         self.camera_id = camera_id
         self.reconnect_interval_seconds = reconnect_interval_seconds
         self._thread: threading.Thread | None = None
@@ -103,6 +107,7 @@ class FrameGrabber:
         try:
             while not self._stop_event.is_set():
                 if capture is None:
+                    self._refresh()
                     capture = self._connect()
                     if capture is None:
                         if not warned:
@@ -137,6 +142,14 @@ class FrameGrabber:
             self._connected = False
             if capture is not None:
                 capture.release()
+
+    def _refresh(self) -> None:
+        if self._refresh_source is None:
+            return
+        try:
+            self.source = self._refresh_source() or self.source
+        except Exception:  # noqa: BLE001 - a failed lookup must never kill the capture thread
+            logger.debug("%s: could not refresh source", self.camera_id, exc_info=True)
 
     def _connect(self) -> cv2.VideoCapture | None:
         try:

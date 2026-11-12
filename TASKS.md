@@ -167,3 +167,8 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 > Depende de: `aforo-db` task 12 (RPCs `pending_enrollments` y `complete_enrollment`) y `aforo-frontend` task 21.
 
 - [x] **18.1** `feat(enrollment): add script to enroll students from web photos` — `python -m enrollment.sync_web_enrollments [--watch]`: pide las fotos pendientes con la llave de dispositivo, calcula el embedding periocular en local (mínimo 3 fotos con un solo rostro), lo guarda en `data/embeddings/<studentId>.npy` y llama a `complete_enrollment`, que borra las fotos en la nube. Si fallan, marca el registro como fallido. Excepción documentada a la regla 1 de `AGENTS.md`.
+
+### Task 19 — Cámaras conectadas desde la web **(Prioridad 1)**
+> Depende de: `aforo-db` task 14 (RPC `camera_sources`) y `aforo-frontend` task 24.
+
+- [x] **19.1** `feat(capture): read camera connections registered in the web app` — Al arrancar y en cada reconexión, `FrameGrabber` pide la IP y cuenta de cada Tapo con la llave del salón y arma `rtsp://...:554/stream1`. Orden: variable `AFORO_CAMERA_*_SOURCE` > web > `pilot.yaml`. Cambiar la IP en la web se aplica solo, sin reiniciar. Excepción: la clave de la cámara viaja cifrada desde Supabase, solo por HTTPS.

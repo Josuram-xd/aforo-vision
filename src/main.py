@@ -111,10 +111,18 @@ def main(argv: list[str] | None = None) -> int:
         single_camera_fallback=not args.no_single_camera_fallback,
     )
 
-    grabbers = [
-        FrameGrabber(camera.source, camera.camera_id, config.capture.reconnect_interval_seconds)
-        for camera in config.cameras.values()
-    ]
+    # Cameras registered in the web app win over pilot.yaml; AFORO_CAMERA_*_SOURCE still wins over both
+    cloud_sources = None
+    if not args.dry_run:
+        from src.capture.cloud_sources import CloudCameraSources
+
+        cloud_sources = CloudCameraSources(config.backend.url, config.backend.supabase_key, config.backend.device_key,
+                                           config.backend.timeout_seconds)
+    grabbers = []
+    for camera in config.cameras.values():
+        refresh = None if cloud_sources is None or camera.pinned else (lambda cid=camera.camera_id: cloud_sources.url_for(cid))
+        source = (refresh() if refresh else None) or camera.source
+        grabbers.append(FrameGrabber(source, camera.camera_id, config.capture.reconnect_interval_seconds, refresh))
     heartbeat = None
     if heartbeat_client is not None:
         from src.events.heartbeat import HeartbeatThread
