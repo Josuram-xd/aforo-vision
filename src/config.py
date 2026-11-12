@@ -41,6 +41,7 @@ def is_secure_url(url: str) -> bool:
 class CameraConfig:
     camera_id: str
     source: int | str  # USB index or stream URL
+    pinned: bool = False  # True when AFORO_CAMERA_*_SOURCE is set: the web-registered connection must not override it
 
 
 @dataclass(frozen=True)
@@ -191,7 +192,7 @@ def _parse_cameras(section: dict) -> dict[str, CameraConfig]:
             raise ConfigError(f"missing field: cameras.{camera_id}.source")
         env_source = os.environ.get(_ENV_CAMERA_SOURCE[camera_id])
         source = _parse_source(env_source if env_source else entry["source"], camera_id)
-        cameras[camera_id] = CameraConfig(camera_id=camera_id, source=source)
+        cameras[camera_id] = CameraConfig(camera_id=camera_id, source=source, pinned=bool(env_source))
     return cameras
 
 
