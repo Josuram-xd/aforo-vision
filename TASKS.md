@@ -181,5 +181,5 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 ### Task 21 — Arranque automático y chequeos de inicio **(Prioridad 1)**
 
 - [x] **21.1** `feat(events): check backend with read-only camera_sources` — El chequeo de arranque ya no manda `camera_heartbeat(online=True)`: hace un POST a `rpc/camera_sources` con las dos llaves y considera OK cualquier 2xx. Así el dashboard no muestra cámaras "En línea" antes de abrir los grabbers.
-- [ ] **21.2** `fix(capture): mask RTSP credentials using the last @` — `_describe_source` enmascara con el último `@`, para que una contraseña con `@` no se filtre en los logs.
+- [x] **21.2** `fix(capture): mask RTSP credentials using the last @` — `_describe_source` enmascara con el último `@`, para que una contraseña con `@` no se filtre en los logs.
 - [ ] **21.3** `feat(scripts): add Windows autostart task for vision and enrollment sync` — `scripts/windows/install_autostart.ps1` registra la tarea programada "AforoVision" al iniciar sesión (oculta, con reinicio automático y logs en `data\logs`); `uninstall_autostart.ps1` la elimina.
