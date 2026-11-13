@@ -228,6 +228,30 @@ Cómo funciona (igual en ambas cámaras): se compara una versión reducida en gr
 
 **Riesgo.** Si la ROI es mala (no cubre por donde pasa la gente) o el umbral es alto, se puede perder un cruce, y eso falsea el aforo. Antes de usarlo en el piloto, valida con 30 pasadas reales (entradas y salidas, rápido y lento) comparando el conteo con y sin modo ahorro. Un cambio brusco de exposición de la cámara puede mantener el gate abierto (gasta CPU, no pierde cruces).
 
+## Rendimiento y temperatura
+
+Medido con `python -m tools.bench_pipeline` (fotogramas sintéticos de 1920x1080, CPU de 16 hilos lógicos, mejor de 10 repeticiones; **no** hay cámara real en estas cifras):
+
+| Etapa (ms por fotograma o recorte) | Antes | Después |
+|---|---|---|
+| Decodificar 1080p (archivo MJPEG, aproxima RTSP) | 4,4 | 4,4 |
+| Preprocesado (letterbox + blob) | 0,4-0,7 | igual |
+| Tracker + húngaro (4 personas) | 0,1-0,2 | igual |
+| YOLO pose, backend `onnx` | 22-30 | 22-26 |
+| YOLO pose, backend `torch` (solo, sin otros modelos) | 24 | 24 |
+| OSNet (cuerpo) | 45-65 | 4,4 |
+| SCRFD (detector de rostro) | 745-800 | 45 |
+| ArcFace (ojos) | 1900-2100 | 50 |
+
+Hallazgos y opciones:
+
+- **Los hilos que giran en vacío eran el problema.** Cada sesión de onnxruntime mantiene hilos que "giran" esperando trabajo; con 4-5 modelos en un proceso se pelean los núcleos (CPU al 100 % aunque no haya nadie en cámara y modelos 10-40 veces más lentos). Ahora todas las sesiones se crean con `allow_spinning=0` (`src/performance.py`). Las salidas son idénticas bit a bit (se comparó YOLO, OSNet y ArcFace con y sin la opción). No requiere configuración.
+- **`detection.backend: onnx` es lo más recomendable.** Con `torch` en el mismo proceso, los modelos de InsightFace (SCRFD, ArcFace) y a veces YOLO siguen 10-30 veces más lentos (medido: SCRFD 370-530 ms, ArcFace 1000-1700 ms, YOLO 125-225 ms) aunque se limiten los hilos; no se pudo aislar la causa. Con `onnx` todas las etapas quedan en las cifras de la tabla. Antes de cambiar el default, valida con `python -m tools.compare_detectors` y la cámara real que los conteos coinciden.
+- **`performance.cpu_threads`** (en `config/pilot.yaml`, por defecto `null` = no tocar): limita los hilos de onnxruntime, OpenCV y torch (este último solo con `backend: torch`). Recomendación: la mitad de los núcleos (p. ej. 4 con 8 núcleos) para bajar calor y ruido del ventilador a costa de algo de latencia; no se midió el efecto sobre la temperatura (sin sensor ni cámara real).
+- **`performance.low_priority`** (por defecto `true`): en Windows baja el proceso a prioridad BELOW_NORMAL para que el resto del equipo siga fluido; en otros sistemas se ignora. No reduce el calor por sí solo.
+- El arranque ya es liviano (`import src.main` tarda 0,13 s y no carga torch, onnxruntime ni insightface hasta que se necesitan).
+- Lo que no se pudo medir sin cámara real: la lectura/decodificación RTSP H.264 de las Tapo, la temperatura y los FPS reales con personas.
+
 ## Limitaciones
 
 **Limitación del proyecto:** el sistema requiere **siempre** un computador encendido, con `aforo-vision` corriendo, conectado a la **misma red local** que las cámaras. Las cámaras (Tapo C200) solo entregan su video dentro de su red; la red de la institución no permite configurar el router, así que no es posible alcanzarlas desde internet ni procesar el video en la nube. La web, la base de datos, los usuarios y las alertas funcionan sin ese computador, pero sin él no hay conteo ni estado de las cámaras (aparecen sin conexión).
