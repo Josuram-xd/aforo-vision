@@ -75,6 +75,7 @@ Durante la sesión de un curso, en una sola puerta:
 - Python 3.14.
 - El video nunca sale del laptop; solo el JSON del evento resuelto.
 - Presupuesto de hardware para las cámaras: dentro de los ~500.000 COP totales del proyecto (compartido con las otras piezas de hardware).
+- **Limitación conocida (2026-11-12):** el sistema requiere siempre un computador encendido con `aforo-vision`, en la misma red local que las cámaras. Las Tapo solo entregan video dentro de su red y la red de la institución no permite configurar el router, así que no se puede procesar en la nube. Sin ese computador no hay conteo ni estado de las cámaras (aparecen sin conexión). Ver `ARCHITECTURE.md` ADR-008.
 
 ## 9. Preguntas abiertas
 

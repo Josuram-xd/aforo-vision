@@ -6,6 +6,7 @@ Checklist para operar `aforo-vision` el día de la prueba. Todos los comandos se
 
 ## 0. La noche anterior
 
+- [ ] Un computador con aforo-vision, en la misma red que las cámaras, debe estar encendido durante todo el uso.
 - [ ] Laptop cargado y cargador en la maleta. Plan de energía en "Alto rendimiento" y suspensión desactivada.
 - [ ] Celular con datos suficientes para el hotspot y cargado (o con cargador).
 - [ ] Cable USB de la cámara, cable/adaptador de corriente de la cámara WiFi, extensión eléctrica.

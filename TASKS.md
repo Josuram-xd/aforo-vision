@@ -189,3 +189,8 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 
 - [x] **22.1** `feat(capture): serve on-demand camera snapshots [22.1]` — `src/capture/snapshots.py`: cada 3 s pide las solicitudes pendientes y envía una foto JPEG (≤640 px, calidad 70) del último frame, o `null` si la cámara no está conectada o el frame tiene más de 5 s. Nunca guarda la imagen en disco ni en logs; los errores de red no detienen el hilo.
 - [x] **22.2** `docs: document the on-demand snapshot privacy exception [22.2]` — Excepción en `AGENTS.md` regla 1, sección 10.6 de `ARCHITECTURE.md` y nota en `README.md` y el runbook: el aviso de videovigilancia y el consentimiento deben mencionarlo.
+
+### Task 23 — Limitación del nodo local **(Prioridad 1)**
+> Decisión del 2026-11-12 (dueño): el sistema requiere siempre un computador encendido con `aforo-vision` en la misma red local que las cámaras. Las Tapo solo entregan video dentro de su red y la institución no permite configurar el router, así que no se procesa en la nube.
+
+- [x] **23.1** `docs: document the local-node limitation [23.1]` — Sección «Limitaciones» en `README.md`, restricción en `PRD.md` (sección 8), ADR-008 en `ARCHITECTURE.md` (con la alternativa del navegador descartada) y una línea en la lista previa de `docs/runbook-dia-piloto.md`.

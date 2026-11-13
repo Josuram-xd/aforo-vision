@@ -173,6 +173,12 @@ Produces the resolved event (see `aforo-backend/ARCHITECTURE.md` for the full sh
 **Why**: keeps ADR-001's privacy guarantee (Ley 1581: video and identities stay on the laptop) and costs nothing; relaying video through AWS (Kinesis Video Streams, a media server on EC2) would cost money and move biometric footage to the cloud.
 **Trade-off**: the camera views only work for devices on the same network as the laptop, and the page that shows them must be served over plain HTTP from that network (e.g. the frontend running on the laptop), because a browser blocks `http://` LAN images inside an HTTPS page such as the Amplify deployment.
 
+### ADR-008: A local node on the same network as the cameras
+
+**Decision**: The system requires an always-on computer running `aforo-vision` on the same local network as the cameras. The Tapo C200 cameras only serve their video inside their own network, and the institution's network does not allow configuring the router, so the cameras cannot be reached from the internet and video cannot be processed in the cloud. Without this node there is no counting and the cameras show as offline.
+**Why**: consistent with ADR-001, video never leaves the local device, and the cameras are reachable only inside their network, so processing must sit there too. Only resolved JSON events and on-demand snapshots (section 10.6) travel to Supabase.
+**Alternative considered**: use the browser of a phone or laptop as the camera, without `aforo-vision`. Rejected on 2026-11-12: it forces the Tapo cameras to be dropped, replaces the two-checkpoint model with a single virtual line, and cannot identify people by face without sending biometric data to the browser.
+
 ## 6. Data structures used (course mapping — Estructuras de Datos)
 
 | Data structure | Where it's used |
