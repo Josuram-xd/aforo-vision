@@ -182,4 +182,4 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 > Depende de: `aforo-db` (RPCs `pending_snapshot_requests` y `submit_camera_snapshot`). Excepción a la regla 1 de `AGENTS.md`, aprobada por el usuario el 2026-11-12.
 
 - [x] **22.1** `feat(capture): serve on-demand camera snapshots [22.1]` — `src/capture/snapshots.py`: cada 3 s pide las solicitudes pendientes y envía una foto JPEG (≤640 px, calidad 70) del último frame, o `null` si la cámara no está conectada o el frame tiene más de 5 s. Nunca guarda la imagen en disco ni en logs; los errores de red no detienen el hilo.
-- [ ] **22.2** `docs: document the on-demand snapshot privacy exception [22.2]` — Excepción en `AGENTS.md` regla 1, sección 10.6 de `ARCHITECTURE.md` y nota en `README.md` y el runbook: el aviso de videovigilancia y el consentimiento deben mencionarlo.
+- [x] **22.2** `docs: document the on-demand snapshot privacy exception [22.2]` — Excepción en `AGENTS.md` regla 1, sección 10.6 de `ARCHITECTURE.md` y nota en `README.md` y el runbook: el aviso de videovigilancia y el consentimiento deben mencionarlo.

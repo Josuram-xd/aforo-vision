@@ -289,3 +289,7 @@ The stream server of 4.10 validates **Supabase** JWTs (project JWKS) instead of 
 ### 10.5 Web enrollment (pending decision)
 
 Today students are enrolled in person with `enrollment/enroll_student.py`. A web flow (the student signs up, accepts the consent text and the page captures ~10 periocular samples) is possible but sends biometric samples over the internet; it needs encrypted upload directly to the vision node (never to Supabase tables) and an updated consent form. Not planned until the team decides.
+
+### 10.6 On-demand camera snapshots (task 22)
+
+An admin can ask the web for a still picture of a camera. Every 3 s `src/capture/snapshots.py` asks `pending_snapshot_requests` and answers each request with `submit_camera_snapshot`: one JPEG (max 640 px wide, quality 70) of the latest frame, or `null` if the camera is offline or its frame is older than 5 s. This is the only exception to the "video never leaves the laptop" rule (AGENTS.md rule 1): a single still per camera on request, sent over HTTPS to `private.camera_snapshots`, deleted after 10 minutes, with a log of who asked. No video is recorded or streamed, and the image is never written to disk or to logs.
