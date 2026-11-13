@@ -63,6 +63,24 @@ python -m tools.export_osnet_onnx            # OSNet → data/osnet/
 
 `yolo26n-pose.pt` va en la raíz del repo.
 
+### Instalación liviana (sin torch)
+
+El entorno completo pesa ~1,4 GB por torch/ultralytics. El equipo que solo ejecuta el pipeline puede usar ONNX (~0,5 GB):
+
+```bash
+pip install -r requirements-slim.txt          # sin torch, torchvision ni ultralytics
+```
+
+y en `config/pilot.yaml` poner `detection.backend: onnx` (usa `models/yolo26n-pose.onnx`, ya incluido en el repo). El camino con torch sigue siendo el **default** y no cambia. Para regenerar el modelo o comparar ambos caminos (requiere torch, una sola vez):
+
+```bash
+pip install -r requirements-export.txt
+python -m tools.export_yolo_onnx
+python -m tools.compare_detectors --source 0      # cámara, video, imagen, carpeta o rtsp://...
+```
+
+Usa el backend `onnx` solo cuando `compare_detectors` diga «equivalentes» con tu propia cámara.
+
 ### Variables de entorno
 
 Los secretos nunca van en `config/pilot.yaml` ni en git. En PowerShell:

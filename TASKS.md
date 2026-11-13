@@ -195,6 +195,15 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 
 - [x] **23.1** `docs: document the local-node limitation [23.1]` — Sección «Limitaciones» en `README.md`, restricción en `PRD.md` (sección 8), ADR-008 en `ARCHITECTURE.md` (con la alternativa del navegador descartada) y una línea en la lista previa de `docs/runbook-dia-piloto.md`.
 
+### Task 24 — Detección con ONNX, sin torch **(Prioridad 2)**
+> El camino con torch sigue siendo el default; ONNX es opcional hasta validarlo con la cámara real (`tools/compare_detectors.py`).
+
+- [x] **24.1** `feat(tools): add YOLO pose ONNX export script and model [24.1]` — `python -m tools.export_yolo_onnx` genera `models/yolo26n-pose.onnx` (12 MB, versionado).
+- [x] **24.2** `feat(detection): add onnxruntime pose detector without torch [24.2]` — `OnnxPoseDetector`: letterbox, onnxruntime, NMS con OpenCV, misma interfaz que `YoloPoseDetector`.
+- [x] **24.3** `feat(config): add detection.backend torch|onnx with validation [24.3]` — `detection.backend` (default `torch`) y `detection.onnx_model`.
+- [x] **24.4** `feat(tools): add torch vs onnx detector comparison [24.4]` — conteo, IoU, distancia de keypoints y FPS; veredicto «equivalentes» / «revisar».
+- [x] **24.5** `docs: add slim requirements and install notes [24.5]` — `requirements-slim.txt`, `requirements-export.txt` y sección en el README. Entorno slim medido: ~0,5 GB frente a ~1,4 GB.
+
 ### Task 25 — Instalación en Windows sin Docker **(Prioridad 1)**
 > Objetivo: que alguien sin Docker instale aforo-vision con un paso a paso corto y que el sistema diga qué falla.
 

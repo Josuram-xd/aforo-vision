@@ -1,0 +1,9 @@
+# One-off tools and comparison: export YOLO/OSNet to ONNX and run tools.compare_detectors. Same pins as requirements.txt.
+-r requirements-slim.txt
+
+ultralytics==8.4.165
+torch==2.14.0
+torchvision==0.29.0
+
+# Reference implementation for tests/test_hungarian_vs_scipy.py
+scipy==1.18.1
