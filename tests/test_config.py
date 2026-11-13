@@ -136,3 +136,19 @@ def test_main_returns_2_on_placeholder_key(monkeypatch):
     monkeypatch.setattr(main_module, "load_dotenv", lambda: None)
     monkeypatch.setenv("AFORO_DEVICE_KEY", "<llave del salón>")
     assert main_module.main(["--dry-run"]) == 2
+
+
+def test_detection_backend_defaults_to_torch():
+    config = load_config(PILOT_YAML)
+    assert config.detection.backend == "torch"
+    assert config.detection.onnx_model == "models/yolo26n-pose.onnx"
+
+
+def test_accepts_onnx_backend(tmp_path):
+    config = load_config(write_config(tmp_path, detection__backend="onnx", detection__onnx_model="m/x.onnx"))
+    assert (config.detection.backend, config.detection.onnx_model) == ("onnx", "m/x.onnx")
+
+
+def test_rejects_unknown_detection_backend(tmp_path):
+    with pytest.raises(ConfigError, match="detection.backend"):
+        load_config(write_config(tmp_path, detection__backend="tensorrt"))

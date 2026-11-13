@@ -20,6 +20,8 @@ capture:
 
 detection:
   model: yolo26n-pose.pt
+  backend: torch                        # torch (default, needs torch/ultralytics) | onnx (requirements-slim.txt, sin torch)
+  onnx_model: models/yolo26n-pose.onnx  # solo se usa con backend: onnx (python -m tools.export_yolo_onnx)
   confidence_threshold: 0.5
 
 tracking:

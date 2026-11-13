@@ -1,0 +1,21 @@
+# Installation without torch/ultralytics/torchvision (detection.backend: onnx). Same pins as requirements.txt.
+# Needs models/yolo26n-pose.onnx (versioned in the repo; regenerate with `python -m tools.export_yolo_onnx`,
+# which does need requirements-export.txt) and data/osnet/*.onnx (tools.export_osnet_onnx).
+# Target: CPython 3.14 (not 3.14.1), CPU only.
+
+opencv-python==5.0.0.93
+numpy==2.5.3
+
+# Identity (ArcFace via InsightFace) and ONNX inference for YOLO pose and OSNet
+insightface==2.0
+onnxruntime==1.30.0
+
+# Events / config
+httpx==0.28.1
+pyyaml==6.0.3
+
+# Stream server login (Supabase JWT via JWKS)
+PyJWT==2.15.1
+cryptography==50.0.2
+
+pytest==9.1.1

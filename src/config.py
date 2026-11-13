@@ -72,6 +72,8 @@ class CaptureConfig:
 class DetectionConfig:
     model: str
     confidence_threshold: float
+    backend: str = "torch"  # "torch" (Ultralytics) or "onnx" (onnxruntime, no torch needed)
+    onnx_model: str = "models/yolo26n-pose.onnx"
 
 
 @dataclass(frozen=True)
@@ -138,6 +140,8 @@ def load_config(path: str | Path) -> PilotConfig:
         detection=DetectionConfig(
             model=str(_field(raw, "detection", "model")),
             confidence_threshold=_unit_float(raw, "detection", "confidence_threshold"),
+            backend=_detection_backend(_section(raw, "detection")),
+            onnx_model=str(_section(raw, "detection").get("onnx_model") or "models/yolo26n-pose.onnx"),
         ),
         tracking=TrackingConfig(
             iou_threshold=_unit_float(raw, "tracking", "iou_threshold"),
@@ -169,6 +173,13 @@ def _field(raw: dict, section: str, key: str):
     if key not in values or values[key] is None:
         raise ConfigError(f"missing field: {section}.{key}")
     return values[key]
+
+
+def _detection_backend(section: dict) -> str:
+    backend = section.get("backend", "torch")
+    if backend not in ("torch", "onnx"):
+        raise ConfigError(f"detection.backend debe ser 'torch' u 'onnx', se recibio {backend!r}")
+    return backend
 
 
 def _number(raw: dict, section: str, key: str) -> float:
