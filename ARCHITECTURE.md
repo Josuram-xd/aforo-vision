@@ -253,7 +253,7 @@ See `aforo-backend/ARCHITECTURE.md` for the full shared REST contract. `aforo-vi
 | Rejected (set aside) | `400` | `400` |
 | Bad keys (keep and stop) | `401`/`403` | `401`/`403` |
 | Retry later | network, 5xx, 408/425/429 | same; `429` now also means the 120 req/min limit |
-| Startup check | `GET /health` | one `camera_heartbeat` per camera (proves network + both keys) |
+| Startup check | `GET /health` | read-only `rpc/camera_sources` (proves network + both keys, changes no camera state) |
 
 **Camera heartbeats**: a background thread calls `rpc/camera_heartbeat(code, online)` for each camera every 30 s with the grabber's `is_connected` state, so the dashboard shows camera status live and the database opens/closes `camera_offline` alerts. It never blocks frame processing.
 
