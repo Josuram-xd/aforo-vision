@@ -13,6 +13,7 @@ from pathlib import Path
 from enrollment.enroll_student import EMBEDDINGS_DIR
 from src.capture.frame_grabber import FrameGrabber
 from src.capture.motion_gate import MotionGate
+from src import performance
 from src.config import ConfigError, load_config, load_dotenv
 from src.dedup.ttl_set import TTLSet
 from src.debug.preview import Annotation, PreviewWindows
@@ -65,6 +66,8 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigError as exc:
         logger.error("configuración inválida: %s", exc)
         return 2
+    # Once, before any model exists: thread pools read the limit when they are created
+    performance.apply(config.performance.cpu_threads, config.performance.low_priority, config.detection.backend)
     if not args.dry_run:
         missing = [name for name, value in (("AFORO_SUPABASE_KEY", config.backend.supabase_key),
                                             ("AFORO_DEVICE_KEY", config.backend.device_key)) if not value]

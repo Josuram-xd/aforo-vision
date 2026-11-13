@@ -60,3 +60,7 @@ motion:
   roi:
     camera-outside: [0.0, 0.0, 1.0, 1.0]
     camera-inside: [0.0, 0.0, 1.0, 1.0]   # cambia esto (ej. [0.3, 0.1, 0.8, 1.0]) antes de activar
+
+performance:
+  cpu_threads: null   # null = no tocar. Para bajar calor/ruido pon aprox. la mitad de tus nucleos (p. ej. 4 con 8 nucleos)
+  low_priority: true  # Windows: prioridad BELOW_NORMAL para que el equipo siga fluido

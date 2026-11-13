@@ -188,3 +188,35 @@ def test_motion_custom_values_load(tmp_path):
 def test_motion_invalid_values_raise_spanish_error(tmp_path, override):
     with pytest.raises(ConfigError, match="motion"):
         load_config(write_config(tmp_path, **override))
+
+
+def test_performance_defaults_when_section_is_missing(tmp_path):
+    raw = yaml.safe_load(PILOT_YAML.read_text(encoding="utf-8"))
+    del raw["performance"]
+    path = tmp_path / "pilot.yaml"
+    path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+    performance = load_config(path).performance
+    assert performance.cpu_threads is None and performance.low_priority is True
+
+
+def test_repo_pilot_yaml_leaves_threads_untouched():
+    assert load_config(PILOT_YAML).performance.cpu_threads is None
+
+
+def test_performance_accepts_thread_cap_and_priority_off(tmp_path):
+    path = write_config(tmp_path, performance__cpu_threads=4, performance__low_priority=False)
+    performance = load_config(path).performance
+    assert performance.cpu_threads == 4 and performance.low_priority is False
+
+
+@pytest.mark.parametrize("value", [0, -2, 1.5, "4", True])
+def test_performance_rejects_bad_cpu_threads(tmp_path, value):
+    path = write_config(tmp_path, performance__cpu_threads=value)
+    with pytest.raises(ConfigError, match="performance.cpu_threads"):
+        load_config(path)
+
+
+def test_performance_rejects_non_boolean_priority(tmp_path):
+    path = write_config(tmp_path, performance__low_priority="si")
+    with pytest.raises(ConfigError, match="performance.low_priority"):
+        load_config(path)

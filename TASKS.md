@@ -219,3 +219,12 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 - [x] **26.3** `feat(main): skip detector on frames without motion [26.3]` — Misma lógica para ambas cámaras; gate apagado = comportamiento idéntico; `expire` y latido siguen; registro cada 60 s.
 - [x] **26.4** `feat(tools): add motion preview and ROI calibration tool [26.4]` — `python -m tools.motion_preview` (ventana o modo texto).
 - [x] **26.5** `docs: document motion saving mode [26.5]` — Sección «Modo ahorro (movimiento)» en `README.md`.
+
+### Task 27 — Menos CPU y menos calor **(Prioridad 1)**
+> Problema: un solo proceso `python -m src.main` acumuló ~5400 s de CPU y el portátil se calienta. Sin cambiar conteo, dirección ni identidad. El procesamiento solo con movimiento va en otra task.
+
+- [x] **27.1** `feat(tools): add pipeline stage benchmark [27.1]` — `python -m tools.bench_pipeline`: ms por fotograma de decodificación, preprocesado, detector (onnx/torch), tracker y embeddings, con fotogramas sintéticos.
+- [x] **27.2** `perf(inference): disable onnxruntime idle thread spinning [27.2]` — `src/performance.py` crea las opciones de sesión de todos los modelos ONNX con `allow_spinning=0`. Las salidas son idénticas bit a bit; con varios modelos en el mismo proceso ArcFace pasaba de ~2000 ms a ~50 ms.
+- [x] **27.3** `feat(config): add performance.cpu_threads and low_priority [27.3]` — Sección opcional `performance:` en `pilot.yaml` con validación en español (`cpu_threads` null o entero ≥ 1, `low_priority` booleano, por defecto true).
+- [x] **27.4** `feat(main): apply thread limit and low priority at startup [27.4]` — Una sola llamada en `main()` antes de crear los modelos: limita hilos de onnxruntime, OpenCV y torch (solo con backend torch) y baja la prioridad a BELOW_NORMAL en Windows.
+- [x] **27.5** `docs: add performance and temperature section [27.5]` — «Rendimiento y temperatura» en `README.md` con tiempos medidos y recomendaciones.

@@ -30,7 +30,9 @@ class BodyEmbedder:
                 )
             import onnxruntime  # lazy: only needed when the real model is loaded
 
-            session = onnxruntime.InferenceSession(str(model_file), providers=["CPUExecutionProvider"])
+            from src.performance import ort_session_options
+
+            session = onnxruntime.InferenceSession(str(model_file), ort_session_options(), providers=["CPUExecutionProvider"])
         self._session = session
         self._input_name = session.get_inputs()[0].name
 
