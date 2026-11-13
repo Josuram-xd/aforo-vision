@@ -111,6 +111,18 @@ class BackendConfig:
 
 
 @dataclass(frozen=True)
+class MotionConfig:
+    enabled: bool = False  # off by default: counting correctly matters more than saving CPU
+    hold_seconds: float = 8.0
+    idle_fps: float = 4.0
+    pixel_threshold: int = 25
+    min_area: float = 0.01
+    warmup_seconds: float = 3.0
+    roi: dict[str, tuple[float, float, float, float]] = field(
+        default_factory=lambda: {camera_id: (0.0, 0.0, 1.0, 1.0) for camera_id in CAMERA_IDS})
+
+
+@dataclass(frozen=True)
 class PilotConfig:
     cameras: dict[str, CameraConfig]
     capture: CaptureConfig
@@ -120,6 +132,7 @@ class PilotConfig:
     matching: MatchingConfig
     dedup: DedupConfig
     backend: BackendConfig
+    motion: MotionConfig = field(default_factory=MotionConfig)
 
 
 def load_config(path: str | Path) -> PilotConfig:
@@ -158,6 +171,7 @@ def load_config(path: str | Path) -> PilotConfig:
         ),
         dedup=DedupConfig(ttl_seconds=_positive_float(raw, "dedup", "ttl_seconds")),
         backend=_parse_backend(_section(raw, "backend")),
+        motion=_parse_motion(raw.get("motion")),
     )
 
 
@@ -259,4 +273,46 @@ def _parse_backend(section: dict) -> BackendConfig:
         retry_queue_path=Path(_field(raw, "backend", "retry_queue_path")),
         supabase_key=_env_value(_ENV_SUPABASE_KEY),
         device_key=_env_value(_ENV_DEVICE_KEY),
+    )
+
+
+def _parse_motion(section) -> MotionConfig:
+    if section is None:
+        return MotionConfig()
+    if not isinstance(section, dict):
+        raise ConfigError("motion debe ser un bloque con claves (enabled, hold_seconds, ...)")
+    defaults = MotionConfig()
+
+    def number(key, low, high=None, integer=False):
+        value = section.get(key, getattr(defaults, key))
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ConfigError(f"motion.{key} debe ser un numero, se recibio {value!r}")
+        if value <= low or (high is not None and value > high):
+            rango = f"mayor que {low}" + (f" y como maximo {high}" if high is not None else "")
+            raise ConfigError(f"motion.{key} debe ser {rango}, se recibio {value}")
+        return int(value) if integer else float(value)
+
+    enabled = section.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise ConfigError(f"motion.enabled debe ser true o false, se recibio {enabled!r}")
+    roi_section = section.get("roi") or {}
+    if not isinstance(roi_section, dict) or not set(roi_section) <= set(CAMERA_IDS):
+        raise ConfigError(f"motion.roi solo puede tener las camaras {CAMERA_IDS}")
+    roi = {}
+    for camera_id in CAMERA_IDS:
+        value = roi_section.get(camera_id, defaults.roi[camera_id])
+        ok = (isinstance(value, (list, tuple)) and len(value) == 4
+              and all(isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1 for v in value)
+              and value[0] < value[2] and value[1] < value[3])
+        if not ok:
+            raise ConfigError(f"motion.roi.{camera_id} debe ser [x1, y1, x2, y2] entre 0 y 1 con x1<x2 e y1<y2, se recibio {value!r}")
+        roi[camera_id] = tuple(float(v) for v in value)
+    return MotionConfig(
+        enabled=enabled,
+        hold_seconds=number("hold_seconds", 0),
+        idle_fps=number("idle_fps", 0),
+        pixel_threshold=number("pixel_threshold", 0, 255, integer=True),
+        min_area=number("min_area", 0, 1),
+        warmup_seconds=number("warmup_seconds", -1),
+        roi=roi,
     )

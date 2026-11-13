@@ -12,6 +12,7 @@ from pathlib import Path
 
 from enrollment.enroll_student import EMBEDDINGS_DIR
 from src.capture.frame_grabber import FrameGrabber
+from src.capture.motion_gate import MotionGate
 from src.config import ConfigError, load_config, load_dotenv
 from src.dedup.ttl_set import TTLSet
 from src.debug.preview import Annotation, PreviewWindows
@@ -22,6 +23,14 @@ from src.tracking.sort_tracker import SortTracker
 logger = logging.getLogger("aforo-vision")
 
 _IDLE_SLEEP_SECONDS = 0.005
+_MOTION_LOG_SECONDS = 60.0
+
+
+def process_if_needed(pipeline, gate, camera_id: str, image, timestamp: float, now: float) -> list:
+    """Same rule for every camera: no gate means always process; with a gate, only on motion, a live track or warmup."""
+    if gate is None or gate.should_process(image, now, pipeline.trackers[camera_id].live_boxes()):
+        return pipeline.process_frame(camera_id, image, timestamp)
+    return []
 
 
 def _build_detector(detection):
@@ -152,6 +161,12 @@ def main(argv: list[str] | None = None) -> int:
     tracks: dict[str, list] = {}
     preview = PreviewWindows() if args.debug else None
     last_index: dict[str, int] = {}
+    motion = config.motion
+    gates = {cid: MotionGate(motion.roi[cid], motion.pixel_threshold, motion.min_area, motion.hold_seconds,
+                             motion.idle_fps, motion.warmup_seconds) for cid in config.cameras} if motion.enabled else {}
+    next_motion_log = time.time() + _MOTION_LOG_SECONDS
+    if gates:
+        logger.info("modo ahorro (movimiento) activado")
 
     if delivery is not None:
         delivery.start()
@@ -167,13 +182,17 @@ def main(argv: list[str] | None = None) -> int:
     try:
         while True:
             got_new_frame = False
+            processed_any = False
             for grabber in grabbers:
                 frame = grabber.read_latest()
                 is_new = frame is not None and frame.index != last_index.get(grabber.camera_id)
                 if is_new:
                     last_index[grabber.camera_id] = frame.index
                     got_new_frame = True
-                    tracks[grabber.camera_id] = pipeline.process_frame(grabber.camera_id, frame.image, frame.timestamp)
+                    tracks[grabber.camera_id] = process_if_needed(pipeline, gates.get(grabber.camera_id), grabber.camera_id,
+                                                                  frame.image, frame.timestamp, time.time())
+                    gate = gates.get(grabber.camera_id)
+                    processed_any = processed_any or gate is None or not gate.idle
 
                 if preview is not None:
                     boxes = [Annotation(*t.box, f"id {t.id}") for t in tracks.get(grabber.camera_id, ())]
@@ -182,7 +201,13 @@ def main(argv: list[str] | None = None) -> int:
             pipeline.expire(time.time())
             if preview is not None and not preview.poll():
                 break
-            if not got_new_frame:
+            if gates and time.time() >= next_motion_log:
+                next_motion_log += _MOTION_LOG_SECONDS
+                for camera_id, gate in gates.items():
+                    logger.info("%s: %s", camera_id, gate.summary())
+            if gates and not processed_any and all(g.idle for g in gates.values()):
+                time.sleep(1.0 / motion.idle_fps)  # nothing to do: check again at idle_fps instead of spinning
+            elif not got_new_frame:
                 time.sleep(_IDLE_SLEEP_SECONDS)
     except KeyboardInterrupt:
         pass
