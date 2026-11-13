@@ -114,6 +114,10 @@ class SortTracker:
         self._tracks: list[Track] = []
         self._next_id = 1
 
+    def live_boxes(self) -> list[tuple[float, float, float, float]]:
+        """Boxes of every track still alive (confirmed or not); used by the motion gate to keep following someone."""
+        return [t.box for t in self._tracks]
+
     def update(self, detections: list[Detection]) -> list[Track]:
         """Process one frame. Returns the confirmed tracks that were matched to a detection in it."""
         predicted = [track.predict() for track in self._tracks]
