@@ -15,7 +15,6 @@ from src.capture.frame_grabber import FrameGrabber
 from src.config import ConfigError, load_config, load_dotenv
 from src.dedup.ttl_set import TTLSet
 from src.debug.preview import Annotation, PreviewWindows
-from src.detection.yolo_pose import YoloPoseDetector
 from src.matching.cross_checkpoint import CrossCheckpointMatcher
 from src.pipeline import Pipeline
 from src.tracking.sort_tracker import SortTracker
@@ -23,6 +22,17 @@ from src.tracking.sort_tracker import SortTracker
 logger = logging.getLogger("aforo-vision")
 
 _IDLE_SLEEP_SECONDS = 0.005
+
+
+def _build_detector(detection):
+    """Create one detector for the configured backend; heavy imports stay inside so slim installs never load torch."""
+    if detection.backend == "onnx":
+        from src.detection.yolo_onnx import OnnxPoseDetector
+
+        return OnnxPoseDetector(detection.onnx_model, detection.confidence_threshold)
+    from src.detection.yolo_pose import YoloPoseDetector
+
+    return YoloPoseDetector(detection.model, detection.confidence_threshold)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -98,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     # Same models and thresholds for both cameras (AGENTS.md rule 3)
     pipeline = Pipeline(
         detectors={
-            camera_id: YoloPoseDetector(config.detection.model, config.detection.confidence_threshold)
+            camera_id: _build_detector(config.detection)
             for camera_id in config.cameras
         },
         trackers={
