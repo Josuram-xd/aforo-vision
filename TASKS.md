@@ -178,6 +178,12 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 - [x] **20.1** `feat(config): load aforo-vision .env on startup` — `main()` lee `.env` de la raíz del repo (parser propio, sin dependencias) sin pisar variables ya definidas en el entorno.
 - [x] **20.2** `fix(config): reject placeholder or non-ascii keys with a clear message` — Si una llave tiene caracteres no ASCII, espacios o empieza con `<`, se falla con un mensaje en español que nombra la variable (nunca el valor) y `main()` devuelve 2 sin traceback.
 
+### Task 21 — Arranque automático y chequeos de inicio **(Prioridad 1)**
+
+- [x] **21.1** `feat(events): check backend with read-only camera_sources` — El chequeo de arranque ya no manda `camera_heartbeat(online=True)`: hace un POST a `rpc/camera_sources` con las dos llaves y considera OK cualquier 2xx. Así el dashboard no muestra cámaras "En línea" antes de abrir los grabbers.
+- [x] **21.2** `fix(capture): mask RTSP credentials using the last @` — `_describe_source` enmascara con el último `@`, para que una contraseña con `@` no se filtre en los logs.
+- [x] **21.3** `feat(scripts): add Windows autostart task for vision and enrollment sync` — `scripts/windows/install_autostart.ps1` registra la tarea programada "AforoVision" al iniciar sesión (oculta, con reinicio automático y logs en `data\logs`); `uninstall_autostart.ps1` la elimina.
+
 ### Task 22 — Foto fija bajo demanda **(Prioridad 2)**
 > Depende de: `aforo-db` (RPCs `pending_snapshot_requests` y `submit_camera_snapshot`). Excepción a la regla 1 de `AGENTS.md`, aprobada por el usuario el 2026-11-12.
 

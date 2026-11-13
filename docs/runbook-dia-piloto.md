@@ -42,6 +42,9 @@ $env:AFORO_DEVICE_KEY = "<llave-del-salon>"                         # una por sa
 
 ## 3. Orden de arranque
 
+> Arranque automático: se instala una vez con `.\scripts\windows\install_autostart.ps1` y desde entonces arranca solo al iniciar sesión; los logs están en `data\logs`.
+> Si vas a arrancar a mano (pasos 4 y 8), primero detén la tarea (`Stop-ScheduledTask -TaskName AforoVision`) y cierra los `python.exe` del Administrador de tareas: dos procesos no pueden usar la misma cámara.
+
 1. [ ] Hotspot encendido y laptop conectado.
 2. [ ] Cámara WiFi encendida; esperar a que obtenga IP (~1 min).
 3. [ ] Cámara USB conectada.

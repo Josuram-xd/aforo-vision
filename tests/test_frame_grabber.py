@@ -116,6 +116,11 @@ def test_logs_hide_rtsp_credentials(monkeypatch, caplog):
     assert "secret" not in caplog.text
 
 
+def test_describe_hides_password_that_contains_at_sign():
+    grabber = FrameGrabber("rtsp://u:ab@cd@10.0.0.1/stream", "camera-outside", FAST_RETRY)
+    assert grabber._describe_source() == "rtsp://***@10.0.0.1/stream"
+
+
 def test_warns_once_while_source_stays_down(monkeypatch, caplog):
     opened = use_captures(monkeypatch, FakeCapture(opened=False))
     with caplog.at_level(logging.WARNING):
