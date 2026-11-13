@@ -194,3 +194,10 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 > Decisión del 2026-11-12 (dueño): el sistema requiere siempre un computador encendido con `aforo-vision` en la misma red local que las cámaras. Las Tapo solo entregan video dentro de su red y la institución no permite configurar el router, así que no se procesa en la nube.
 
 - [x] **23.1** `docs: document the local-node limitation [23.1]` — Sección «Limitaciones» en `README.md`, restricción en `PRD.md` (sección 8), ADR-008 en `ARCHITECTURE.md` (con la alternativa del navegador descartada) y una línea en la lista previa de `docs/runbook-dia-piloto.md`.
+
+### Task 25 — Instalación en Windows sin Docker **(Prioridad 1)**
+> Objetivo: que alguien sin Docker instale aforo-vision con un paso a paso corto y que el sistema diga qué falla.
+
+- [x] **25.1** `feat(tools): add doctor diagnostic command [25.1]` — `python -m tools.doctor`: Python y arquitectura, dependencias (según `detection.backend`), modelos, `.env`, Supabase (sin internet / llave rechazada / OK), cada cámara (TCP 554 + RTSP) y espacio en disco / instancia duplicada. Nunca imprime llaves ni claves de cámara.
+- [ ] **25.2** `feat(scripts): add windows install and start scripts [25.2]` — `scripts/windows/install.ps1` (5 pasos, interactivo, idempotente, `-Full`) y `start.ps1`.
+- [ ] **25.3** `docs: add windows install guide and doctor to runbook [25.3]` — Sección «Instalación en Windows (sin Docker)» en `README.md` y el doctor como primer paso en el runbook.
