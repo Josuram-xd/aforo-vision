@@ -36,7 +36,9 @@ class FaceDetector:
                 )
             from insightface.model_zoo import get_model  # lazy: pulls in onnx and onnxruntime
 
-            model_instance = get_model(str(model_file))
+            from src.performance import ort_session_options
+
+            model_instance = get_model(str(model_file), sess_options=ort_session_options(), providers=["CPUExecutionProvider"])
             model_instance.prepare(ctx_id=-1, input_size=INPUT_SIZE, det_thresh=score_threshold)  # CPU only
         self._model = model_instance
         self.score_threshold = score_threshold

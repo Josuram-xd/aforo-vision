@@ -60,7 +60,9 @@ class OnnxPoseDetector:
         if session is None:
             import onnxruntime as ort  # lazy: tests inject a stub
 
-            session = ort.InferenceSession(model, providers=["CPUExecutionProvider"])
+            from src.performance import ort_session_options
+
+            session = ort.InferenceSession(model, ort_session_options(), providers=["CPUExecutionProvider"])
         self._session = session
         self._input_name = session.get_inputs()[0].name
         self._size = int(session.get_inputs()[0].shape[2])  # fixed square input chosen at export time
