@@ -215,7 +215,7 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 > Problema: un solo proceso `python -m src.main` acumuló ~5400 s de CPU y el portátil se calienta. Sin cambiar conteo, dirección ni identidad. El procesamiento solo con movimiento va en otra task.
 
 - [x] **27.1** `feat(tools): add pipeline stage benchmark [27.1]` — `python -m tools.bench_pipeline`: ms por fotograma de decodificación, preprocesado, detector (onnx/torch), tracker y embeddings, con fotogramas sintéticos.
-- [ ] **27.2** `perf(inference): disable onnxruntime idle thread spinning [27.2]` — `src/performance.py` crea las opciones de sesión de todos los modelos ONNX con `allow_spinning=0`. Las salidas son idénticas bit a bit; con varios modelos en el mismo proceso ArcFace pasaba de ~2000 ms a ~50 ms.
+- [x] **27.2** `perf(inference): disable onnxruntime idle thread spinning [27.2]` — `src/performance.py` crea las opciones de sesión de todos los modelos ONNX con `allow_spinning=0`. Las salidas son idénticas bit a bit; con varios modelos en el mismo proceso ArcFace pasaba de ~2000 ms a ~50 ms.
 - [ ] **27.3** `feat(config): add performance.cpu_threads and low_priority [27.3]` — Sección opcional `performance:` en `pilot.yaml` con validación en español (`cpu_threads` null o entero ≥ 1, `low_priority` booleano, por defecto true).
 - [ ] **27.4** `feat(main): apply thread limit and low priority at startup [27.4]` — Una sola llamada en `main()` antes de crear los modelos: limita hilos de onnxruntime, OpenCV y torch (solo con backend torch) y baja la prioridad a BELOW_NORMAL en Windows.
 - [ ] **27.5** `docs: add performance and temperature section [27.5]` — «Rendimiento y temperatura» en `README.md` con tiempos medidos y recomendaciones.

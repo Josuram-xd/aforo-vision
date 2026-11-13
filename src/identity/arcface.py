@@ -30,7 +30,12 @@ class ArcFaceEmbedder:
                 )
             from insightface.model_zoo import ArcFaceONNX  # lazy: pulls in onnx and onnxruntime
 
-            model_instance = ArcFaceONNX(model_file=str(model_file))
+            import onnxruntime
+
+            from src.performance import ort_session_options
+
+            session = onnxruntime.InferenceSession(str(model_file), ort_session_options(), providers=["CPUExecutionProvider"])
+            model_instance = ArcFaceONNX(model_file=str(model_file), session=session)
             model_instance.prepare(ctx_id=-1)  # CPU only
         self._model = model_instance
 
