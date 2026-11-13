@@ -64,6 +64,8 @@ def test_main_applies_performance_once_before_building_models(monkeypatch, tmp_p
         raise Stop  # stop here: nothing after it (models, cameras) may run in this test
 
     monkeypatch.setattr(main_module, "load_dotenv", lambda: None)
+    for name in ("AFORO_BACKEND_URL", "AFORO_SUPABASE_KEY", "AFORO_DEVICE_KEY"):
+        monkeypatch.delenv(name, raising=False)  # a real .env loaded by another test must not leak in
     monkeypatch.setattr(performance, "apply", fake_apply)
     with pytest.raises(Stop):
         main_module.main(["--dry-run"])
