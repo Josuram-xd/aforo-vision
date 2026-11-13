@@ -162,6 +162,12 @@ No se forzaron a propósito: se usó la estructura que resolvía cada problema.
 
 El material del curso está en la carpeta «Estructura de datos» del curso (carpetas Pilas-JHC, Colas-JHC, ListasSimples-JHC, ListasDobles-JHC, ListaCircular-JHC, Arboles y List-JHC), y esta sección enlaza lo aplicado aquí con esos temas.
 
+## Limitaciones
+
+**Limitación del proyecto:** el sistema requiere **siempre** un computador encendido, con `aforo-vision` corriendo, conectado a la **misma red local** que las cámaras. Las cámaras (Tapo C200) solo entregan su video dentro de su red; la red de la institución no permite configurar el router, así que no es posible alcanzarlas desde internet ni procesar el video en la nube. La web, la base de datos, los usuarios y las alertas funcionan sin ese computador, pero sin él no hay conteo ni estado de las cámaras (aparecen sin conexión).
+
+Alternativa evaluada y descartada (2026-11-12): usar el navegador de un celular o portátil como cámara (sin `aforo-vision`). Se descartó porque obliga a dejar de usar las Tapo, cambia el modelo de dos checkpoints por una línea virtual y no permite identificar personas por rostro sin llevar biometría al navegador.
+
 ## Contrato con los otros repos
 
 | Destino | Llamada | Qué |
