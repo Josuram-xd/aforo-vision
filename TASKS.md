@@ -215,7 +215,7 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 > Objetivo: bajar CPU y calor del laptop. Apagado por defecto (`motion.enabled: false`): contar bien es lo crítico y esto no está validado con cámara real.
 
 - [x] **26.1** `feat(capture): add per-camera motion gate [26.1]` — `src/capture/motion_gate.py`: diferencia contra fondo adaptativo sobre imagen reducida y solo dentro de una ROI; histéresis `hold_seconds`; revisa a `idle_fps` cuando está inactivo; un track vivo dentro de la ROI mantiene el procesamiento; contadores procesados/omitidos.
-- [ ] **26.2** `feat(config): add motion section with per-camera roi [26.2]` — `motion:` en `pilot.yaml` y `src/config.py` con validación en español.
+- [x] **26.2** `feat(config): add motion section with per-camera roi [26.2]` — `motion:` en `pilot.yaml` y `src/config.py` con validación en español.
 - [ ] **26.3** `feat(main): skip detector on frames without motion [26.3]` — Misma lógica para ambas cámaras; gate apagado = comportamiento idéntico; `expire` y latido siguen; registro cada 60 s.
 - [ ] **26.4** `feat(tools): add motion preview and ROI calibration tool [26.4]` — `python -m tools.motion_preview` (ventana o modo texto).
 - [ ] **26.5** `docs: document motion saving mode [26.5]` — Sección «Modo ahorro (movimiento)» en `README.md`.

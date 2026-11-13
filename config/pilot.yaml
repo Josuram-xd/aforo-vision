@@ -44,3 +44,19 @@ backend:
   url: "https://your-project-ref.supabase.co"  # placeholder: the real URL goes in AFORO_BACKEND_URL
   timeout_seconds: 5.0
   retry_queue_path: data/retry_queue.sqlite
+
+# Modo ahorro: solo se procesa con YOLO cuando hay movimiento en la ROI (README: «Modo ahorro (movimiento)»).
+# Apagado por defecto: no esta validado con camara real. Calibra con: python -m tools.motion_preview
+motion:
+  enabled: false
+  hold_seconds: 8.0       # tras el ultimo movimiento sigue procesando este tiempo
+  idle_fps: 4.0           # sin movimiento solo se revisa la imagen este numero de veces por segundo
+  pixel_threshold: 25     # cambio de gris (0-255) para contar un pixel como "en movimiento"
+  min_area: 0.01          # fraccion de la ROI que debe cambiar para activar
+  warmup_seconds: 3.0     # margen extra de procesamiento tras activarse
+  # ROI = [x1, y1, x2, y2] en fracciones 0-1 de la imagen. Elige SOLO el marco de la puerta y el pasillo
+  # inmediato. NO incluyas el interior del salon: la camara de adentro ve gente moviendose siempre y el
+  # modo ahorro nunca se apagaria. Un track vivo dentro de la ROI tambien mantiene el procesamiento.
+  roi:
+    camera-outside: [0.0, 0.0, 1.0, 1.0]
+    camera-inside: [0.0, 0.0, 1.0, 1.0]   # cambia esto (ej. [0.3, 0.1, 0.8, 1.0]) antes de activar

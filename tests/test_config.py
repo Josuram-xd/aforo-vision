@@ -152,3 +152,39 @@ def test_accepts_onnx_backend(tmp_path):
 def test_rejects_unknown_detection_backend(tmp_path):
     with pytest.raises(ConfigError, match="detection.backend"):
         load_config(write_config(tmp_path, detection__backend="tensorrt"))
+
+
+def test_motion_defaults_to_disabled_with_full_image_roi():
+    motion = load_config(PILOT_YAML).motion
+    assert motion.enabled is False
+    assert motion.roi["camera-inside"] == (0.0, 0.0, 1.0, 1.0)
+
+
+def test_motion_section_is_optional(tmp_path):
+    raw = yaml.safe_load(PILOT_YAML.read_text(encoding="utf-8"))
+    del raw["motion"]
+    path = tmp_path / "p.yaml"
+    path.write_text(yaml.safe_dump(raw), encoding="utf-8")
+    assert load_config(path).motion.enabled is False
+
+
+def test_motion_custom_values_load(tmp_path):
+    path = write_config(tmp_path, motion__enabled=True, motion__roi={"camera-inside": [0.2, 0.1, 0.8, 1.0]})
+    motion = load_config(path).motion
+    assert motion.enabled and motion.roi["camera-inside"] == (0.2, 0.1, 0.8, 1.0)
+    assert motion.roi["camera-outside"] == (0.0, 0.0, 1.0, 1.0)
+
+
+@pytest.mark.parametrize("override", [
+    {"motion__enabled": "si"},
+    {"motion__hold_seconds": 0},
+    {"motion__idle_fps": -1},
+    {"motion__pixel_threshold": 300},
+    {"motion__min_area": 1.5},
+    {"motion__roi": {"camera-inside": [0.8, 0.1, 0.2, 1.0]}},
+    {"motion__roi": {"camera-inside": [0, 0, 1]}},
+    {"motion__roi": {"camera-x": [0, 0, 1, 1]}},
+])
+def test_motion_invalid_values_raise_spanish_error(tmp_path, override):
+    with pytest.raises(ConfigError, match="motion"):
+        load_config(write_config(tmp_path, **override))
