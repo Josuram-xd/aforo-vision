@@ -49,3 +49,22 @@ def test_lower_priority_is_noop_outside_windows(monkeypatch):
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows only")
 def test_lower_priority_on_windows_does_not_raise():
     assert isinstance(performance.lower_process_priority(), bool)
+
+
+def test_main_applies_performance_once_before_building_models(monkeypatch, tmp_path):
+    from src import main as main_module
+
+    class Stop(Exception):
+        pass
+
+    calls = []
+
+    def fake_apply(*args):
+        calls.append(args)
+        raise Stop  # stop here: nothing after it (models, cameras) may run in this test
+
+    monkeypatch.setattr(main_module, "load_dotenv", lambda: None)
+    monkeypatch.setattr(performance, "apply", fake_apply)
+    with pytest.raises(Stop):
+        main_module.main(["--dry-run"])
+    assert calls == [(None, True, "torch")]  # defaults of config/pilot.yaml
