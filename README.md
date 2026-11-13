@@ -212,6 +212,22 @@ No se forzaron a propósito: se usó la estructura que resolvía cada problema.
 
 El material del curso está en la carpeta «Estructura de datos» del curso (carpetas Pilas-JHC, Colas-JHC, ListasSimples-JHC, ListasDobles-JHC, ListaCircular-JHC, Arboles y List-JHC), y esta sección enlaza lo aplicado aquí con esos temas.
 
+## Modo ahorro (movimiento)
+
+Por defecto el pipeline pasa **cada** fotograma de las dos cámaras por YOLO, lo que calienta el laptop. El modo ahorro (task 26) solo procesa cuando hay movimiento en una región de interés (ROI) por cámara. Está **apagado por defecto** (`motion.enabled: false`) porque no está validado con cámara real.
+
+Cómo funciona (igual en ambas cámaras): se compara una versión reducida en gris de la ROI contra un fondo que se adapta despacio (los cambios lentos de luz no disparan). Si cambia más de `min_area` de la ROI, el gate se abre y sigue abierto `hold_seconds` después del último movimiento. Además se sigue procesando mientras haya un track vivo dentro de la ROI (para no cortar a alguien a mitad de cruce). Sin movimiento solo se revisa la imagen `idle_fps` veces por segundo y se sigue ejecutando `expire` y el latido. Cada 60 s el log dice «procesados / omitidos / % omitido» por cámara.
+
+**Elegir la ROI.** Solo el marco de la puerta y el pasillo inmediato, **no** el interior del salón: la cámara de adentro ve gente moviéndose todo el tiempo y, con la imagen completa, el modo ahorro nunca se apagaría.
+
+1. Calibra con la herramienta (con la cámara real y gente caminando):
+   `python -m tools.motion_preview --camera camera-inside` (o `--source 0` / `--source "rtsp://..."`).
+   Arrastra el mouse para dibujar la ROI; el cuadro se pone rojo cuando el gate estaría activo y arriba ves el % de cambio. Sin ventana: `--no-window` imprime una línea por segundo.
+2. Pega la línea que imprime al salir en `config/pilot.yaml`, `motion.roi.camera-inside` (y lo mismo para `camera-outside`).
+3. Ajusta `pixel_threshold` / `min_area` hasta que el salón quieto no active y una persona en la puerta sí. Pon `motion.enabled: true`.
+
+**Riesgo.** Si la ROI es mala (no cubre por donde pasa la gente) o el umbral es alto, se puede perder un cruce, y eso falsea el aforo. Antes de usarlo en el piloto, valida con 30 pasadas reales (entradas y salidas, rápido y lento) comparando el conteo con y sin modo ahorro. Un cambio brusco de exposición de la cámara puede mantener el gate abierto (gasta CPU, no pierde cruces).
+
 ## Limitaciones
 
 **Limitación del proyecto:** el sistema requiere **siempre** un computador encendido, con `aforo-vision` corriendo, conectado a la **misma red local** que las cámaras. Las cámaras (Tapo C200) solo entregan su video dentro de su red; la red de la institución no permite configurar el router, así que no es posible alcanzarlas desde internet ni procesar el video en la nube. La web, la base de datos, los usuarios y las alertas funcionan sin ese computador, pero sin él no hay conteo ni estado de las cámaras (aparecen sin conexión).

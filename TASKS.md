@@ -218,4 +218,4 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 - [x] **26.2** `feat(config): add motion section with per-camera roi [26.2]` — `motion:` en `pilot.yaml` y `src/config.py` con validación en español.
 - [x] **26.3** `feat(main): skip detector on frames without motion [26.3]` — Misma lógica para ambas cámaras; gate apagado = comportamiento idéntico; `expire` y latido siguen; registro cada 60 s.
 - [x] **26.4** `feat(tools): add motion preview and ROI calibration tool [26.4]` — `python -m tools.motion_preview` (ventana o modo texto).
-- [ ] **26.5** `docs: document motion saving mode [26.5]` — Sección «Modo ahorro (movimiento)» en `README.md`.
+- [x] **26.5** `docs: document motion saving mode [26.5]` — Sección «Modo ahorro (movimiento)» en `README.md`.
