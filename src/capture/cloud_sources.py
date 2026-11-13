@@ -22,10 +22,14 @@ class CloudCameraSources:
         self._headers = {"apikey": supabase_key, "X-Device-Key": device_key, "Content-Type": "application/json"}
         self._client = client or httpx.Client(timeout=timeout)
 
-    def urls(self) -> dict[str, str]:
+    def cameras(self) -> dict[str, dict]:
+        """Raw {cameraCode: {host, username, password}}; the caller must not log the password."""
         response = self._client.post(self._url, json={}, headers=self._headers)
         response.raise_for_status()
-        return {code: build_rtsp_url(c["host"], c["username"], c["password"]) for code, c in response.json().items()}
+        return response.json()
+
+    def urls(self) -> dict[str, str]:
+        return {code: build_rtsp_url(c["host"], c["username"], c["password"]) for code, c in self.cameras().items()}
 
     def url_for(self, camera_id: str) -> str | None:
         """Source for one camera, or None if it has none or the cloud is unreachable (keep the current one)."""
