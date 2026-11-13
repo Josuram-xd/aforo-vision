@@ -108,6 +108,10 @@ python -m src.main                          # día del piloto
 
 El checklist completo del día está en `docs/runbook-dia-piloto.md`.
 
+### Arranque automático (Windows)
+
+Se instala una vez con `.\scripts\windows\install_autostart.ps1` y desde entonces arranca solo al iniciar sesión (sin ventanas); los logs están en `data\logs` (`vision.log` y `enrollment.log`). Para quitarlo: `.\scripts\windows\uninstall_autostart.ps1`.
+
 ### Pruebas
 
 ```bash

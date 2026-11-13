@@ -8,6 +8,7 @@ from src.events.health import check_backend_health
 SUPABASE_KEY = "sb_publishable_test-value-123"
 DEVICE_KEY = "device-key-test-value-456"
 CAMERAS = ("camera-outside", "camera-inside")
+SOURCES_URL = "https://proj.supabase.test/rest/v1/rpc/camera_sources"
 
 
 def _client(handler):
@@ -20,10 +21,10 @@ def _check(handler, **kwargs):
 
 
 def _ok(request):
-    return httpx.Response(200, json={"camera": "x", "status": "online", "lastSeenAt": "2026-10-13T10:00:00Z"})
+    return httpx.Response(200, json={})
 
 
-def test_sends_one_heartbeat_per_camera_with_both_keys():
+def test_reads_camera_sources_with_both_keys_and_sends_no_heartbeat():
     seen = []
 
     def handler(request):
@@ -31,22 +32,19 @@ def test_sends_one_heartbeat_per_camera_with_both_keys():
         return _ok(request)
 
     assert _check(handler) is True
-    url = "https://proj.supabase.test/rest/v1/rpc/camera_heartbeat"
-    assert seen == [(url, SUPABASE_KEY, DEVICE_KEY, {"p_camera_code": code, "p_online": True}) for code in CAMERAS]
+    assert seen == [(SOURCES_URL, SUPABASE_KEY, DEVICE_KEY, {})]
+
+
+@pytest.mark.parametrize("code", [200, 204])
+def test_any_2xx_is_healthy(code):
+    assert _check(lambda r: httpx.Response(code)) is True
 
 
 @pytest.mark.parametrize("code", [400, 401, 403, 429, 500])
 def test_unhealthy_answers_are_false_and_logged(code, caplog):
     with caplog.at_level("WARNING"):
         assert _check(lambda r: httpx.Response(code)) is False
-    assert "camera_heartbeat" in caplog.text
-
-
-def test_one_rejected_camera_makes_the_check_fail():
-    def handler(request):
-        return _ok(request) if json.loads(request.content)["p_camera_code"] == "camera-outside" else httpx.Response(400)
-
-    assert _check(handler) is False
+    assert "camera_sources" in caplog.text
 
 
 def test_network_errors_never_raise():

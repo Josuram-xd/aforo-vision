@@ -165,6 +165,7 @@ class FrameGrabber:
     def _describe_source(self) -> str:
         if isinstance(self.source, int):
             return f"usb index {self.source}"
-        # Hide credentials embedded in RTSP URLs (rtsp://user:pass@host/...)
+        # Hide credentials embedded in RTSP URLs (rtsp://user:pass@host/...); the last @ ends the userinfo,
+        # so a password that contains @ is hidden too
         scheme, sep, rest = self.source.partition("://")
-        return f"{scheme}{sep}***@{rest.split('@', 1)[1]}" if "@" in rest else self.source
+        return f"{scheme}{sep}***@{rest.rsplit('@', 1)[1]}" if "@" in rest else self.source
