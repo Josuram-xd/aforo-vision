@@ -200,4 +200,4 @@ Las tareas v1 que la v2 reemplaza quedan marcadas con ~~tachado~~ y una nota; no
 
 - [x] **25.1** `feat(tools): add doctor diagnostic command [25.1]` — `python -m tools.doctor`: Python y arquitectura, dependencias (según `detection.backend`), modelos, `.env`, Supabase (sin internet / llave rechazada / OK), cada cámara (TCP 554 + RTSP) y espacio en disco / instancia duplicada. Nunca imprime llaves ni claves de cámara.
 - [x] **25.2** `feat(scripts): add windows install and start scripts [25.2]` — `scripts/windows/install.ps1` (5 pasos, interactivo, idempotente, `-Full`) y `start.ps1`.
-- [ ] **25.3** `docs: add windows install guide and doctor to runbook [25.3]` — Sección «Instalación en Windows (sin Docker)» en `README.md` y el doctor como primer paso en el runbook.
+- [x] **25.3** `docs: add windows install guide and doctor to runbook [25.3]` — Sección «Instalación en Windows (sin Docker)» en `README.md` y el doctor como primer paso en el runbook.

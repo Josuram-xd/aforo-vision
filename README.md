@@ -118,6 +118,38 @@ Se instala una vez con `.\scripts\windows\install_autostart.ps1` y desde entonce
 python -m pytest
 ```
 
+## Instalación en Windows (sin Docker)
+
+**Requisitos:** Windows 10/11 de 64 bits, Python 3.14 (el instalador te ayuda a instalarlo), estar en el **mismo WiFi que las cámaras** y una **llave del salón** creada por un admin (más la URL y la publishable key del proyecto de Supabase).
+
+1. Instala [Git](https://git-scm.com/download/win) y clona el repo, o descarga el ZIP desde GitHub y descomprímelo.
+2. Abre PowerShell en la carpeta del repo y corre:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\windows\install.ps1
+```
+
+   El script tiene 5 pasos (Python, entorno virtual, dependencias, `.env`, diagnóstico) y se puede repetir sin problema. Al final ofrece el arranque automático.
+3. Arranca a mano cuando quieras: `.\scripts\windows\start.ps1` (añade `--debug` para ver las ventanas).
+4. Si algo falla, el diagnóstico te dice qué y cómo arreglarlo: `.\.venv\Scripts\python.exe -m tools.doctor`
+
+Los modelos (`yolo26n-pose.pt`, InsightFace, OSNet) se descargan/exportan como se explica en «Puesta en marcha»; el diagnóstico avisa si falta alguno.
+
+### Solución de problemas (mensajes de `tools.doctor`)
+
+| Mensaje | Qué hacer |
+|---|---|
+| `Python 3.14.1` / versión distinta | Instala Python 3.14.2 o superior y vuelve a correr `install.ps1` |
+| `Faltan paquetes` | Vuelve a correr `install.ps1` (retoma donde quedó); revisa internet y 5 GB libres |
+| `Falta el modelo ...` | Corre el comando que indica el diagnóstico junto al mensaje |
+| `Falta AFORO_... en .env` / `parece un texto de ejemplo` | Pon el valor real, sin `<...>`, tildes ni espacios |
+| `Sin internet o Supabase no responde` | Revisa la conexión y la URL de `AFORO_BACKEND_URL` |
+| `Supabase rechazó la llave (401/403)` | La llave del salón es incorrecta o fue revocada: pide otra a un admin |
+| `Cámara ...: no alcanzable` | No estás en el mismo WiFi que la cámara, o el WiFi aísla los equipos (prueba el hotspot del celular); revisa la IP en la web |
+| `puerto abierto pero rechaza usuario/clave` | Revisa la «Cuenta de cámara» de la app Tapo y vuelve a escribirla en la web |
+| `Hay N proceso(s) python -m src.main corriendo` | Cierra la otra instancia o detén la tarea: `Stop-ScheduledTask -TaskName AforoVision` |
+
 ## Estructuras de datos, GRASP y SOLID
 
 Esta sección dice dónde y cómo se aplica cada punto en el código. Las rutas son relativas a la raíz del repo. Los costos marcados "(teórico)" son los estándar de la estructura: el código no los comenta.
