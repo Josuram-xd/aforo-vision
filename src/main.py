@@ -133,6 +133,12 @@ def main(argv: list[str] | None = None) -> int:
         from src.events.heartbeat import HeartbeatThread
 
         heartbeat = HeartbeatThread(heartbeat_client, {g.camera_id: (lambda g=g: g.is_connected) for g in grabbers})
+    snapshots = None
+    if heartbeat_client is not None:
+        from src.capture.snapshots import SnapshotClient, SnapshotWorker
+
+        snapshots = SnapshotWorker(SnapshotClient(config.backend.url, config.backend.supabase_key, config.backend.device_key,
+                                                  config.backend.timeout_seconds), {g.camera_id: g for g in grabbers})
     tracks: dict[str, list] = {}
     preview = PreviewWindows() if args.debug else None
     last_index: dict[str, int] = {}
@@ -143,6 +149,8 @@ def main(argv: list[str] | None = None) -> int:
         grabber.start()
     if heartbeat is not None:
         heartbeat.start()
+    if snapshots is not None:
+        snapshots.start()
     logger.info("pipeline running%s%s, Ctrl+C to stop", " (dry-run)" if args.dry_run else "",
                 " (debug preview: q/Esc to quit)" if preview else "")
 
@@ -171,6 +179,8 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         if heartbeat is not None:
             heartbeat.stop()
+        if snapshots is not None:
+            snapshots.stop()
         for grabber in grabbers:
             grabber.stop()
         if preview is not None:
