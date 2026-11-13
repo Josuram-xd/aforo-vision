@@ -17,3 +17,7 @@ __pycache__/
 # Secrets (Supabase device key, API keys): never commit
 .env
 .env.*
+
+# Exported YOLO pose model (~12 MB): versioned so slim installs need no torch
+!models/
+!models/*.onnx
