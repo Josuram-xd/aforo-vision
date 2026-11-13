@@ -44,3 +44,7 @@ backend:
   url: "https://your-project-ref.supabase.co"  # placeholder: the real URL goes in AFORO_BACKEND_URL
   timeout_seconds: 5.0
   retry_queue_path: data/retry_queue.sqlite
+
+performance:
+  cpu_threads: null   # null = no tocar. Para bajar calor/ruido pon aprox. la mitad de tus nucleos (p. ej. 4 con 8 nucleos)
+  low_priority: true  # Windows: prioridad BELOW_NORMAL para que el equipo siga fluido

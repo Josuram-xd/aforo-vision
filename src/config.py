@@ -111,6 +111,12 @@ class BackendConfig:
 
 
 @dataclass(frozen=True)
+class PerformanceConfig:
+    cpu_threads: int | None = None  # None = leave every library on its default thread count
+    low_priority: bool = True  # BELOW_NORMAL process priority on Windows
+
+
+@dataclass(frozen=True)
 class PilotConfig:
     cameras: dict[str, CameraConfig]
     capture: CaptureConfig
@@ -120,6 +126,7 @@ class PilotConfig:
     matching: MatchingConfig
     dedup: DedupConfig
     backend: BackendConfig
+    performance: PerformanceConfig = field(default_factory=PerformanceConfig)
 
 
 def load_config(path: str | Path) -> PilotConfig:
@@ -158,6 +165,7 @@ def load_config(path: str | Path) -> PilotConfig:
         ),
         dedup=DedupConfig(ttl_seconds=_positive_float(raw, "dedup", "ttl_seconds")),
         backend=_parse_backend(_section(raw, "backend")),
+        performance=_parse_performance(raw.get("performance")),
     )
 
 
@@ -209,6 +217,20 @@ def _positive_int(raw: dict, section: str, key: str) -> int:
     if not isinstance(value, int) or value <= 0:
         raise ConfigError(f"{section}.{key} must be a positive integer, got {value!r}")
     return value
+
+
+def _parse_performance(section) -> PerformanceConfig:
+    if section is None:
+        return PerformanceConfig()
+    if not isinstance(section, dict):
+        raise ConfigError("performance debe ser un bloque con cpu_threads y low_priority")
+    threads = section.get("cpu_threads")
+    if threads is not None and (isinstance(threads, bool) or not isinstance(threads, int) or threads < 1):
+        raise ConfigError(f"performance.cpu_threads debe ser un entero >= 1 (o null para no limitar), se recibio {threads!r}")
+    low_priority = section.get("low_priority", True)
+    if not isinstance(low_priority, bool):
+        raise ConfigError(f"performance.low_priority debe ser true o false, se recibio {low_priority!r}")
+    return PerformanceConfig(cpu_threads=threads, low_priority=low_priority)
 
 
 def _parse_cameras(section: dict) -> dict[str, CameraConfig]:
