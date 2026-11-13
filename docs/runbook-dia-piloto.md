@@ -9,7 +9,7 @@ Checklist para operar `aforo-vision` el día de la prueba. Todos los comandos se
 - [ ] Laptop cargado y cargador en la maleta. Plan de energía en "Alto rendimiento" y suspensión desactivada.
 - [ ] Celular con datos suficientes para el hotspot y cargado (o con cargador).
 - [ ] Cable USB de la cámara, cable/adaptador de corriente de la cámara WiFi, extensión eléctrica.
-- [ ] Aviso de videovigilancia impreso (`docs/aviso-videovigilancia.md`, ya completado con fecha, hora, responsable y contacto).
+- [ ] Aviso de videovigilancia impreso (`docs/aviso-videovigilancia.md`, ya completado con fecha, hora, responsable y contacto). Debe mencionar que un admin puede pedir una foto fija por cámara (task 22, se borra a los 10 minutos).
 - [ ] Autorizaciones firmadas (`docs/consentimiento-informado.md`) guardadas **en físico**: solo se enrola a quien firmó.
 - [ ] Estudiantes enrolados: revisar que `data/embeddings/` tenga solo a quienes firmaron (`python -m enrollment.export_roster` lista el roster sin biometría).
 - [ ] Variables de entorno listas (ver sección 2). Nunca van en `config/pilot.yaml` ni en git.

@@ -13,7 +13,7 @@ cámaras ─► captura ─► detección (YOLO pose) ─► tracking (SORT + h�
         ─► emparejar afuera↔adentro ─► dirección (ENTRY/EXIT) ─► anti-duplicados ─► cola SQLite ─► Supabase (ingest_event)
 ```
 
-En paralelo, un hilo envía cada 30 s el latido de cada cámara (`camera_heartbeat`) para que el dashboard sepa si está en línea.
+En paralelo, un hilo envía cada 30 s el latido de cada cámara (`camera_heartbeat`) para que el dashboard sepa si está en línea. Otro hilo responde, solo cuando un admin lo pide en la web, con una foto fija JPEG por cámara (task 22, `ARCHITECTURE.md` 10.6). El aviso de videovigilancia y el consentimiento deben mencionar esta foto fija.
 
 ## Estructura
 
