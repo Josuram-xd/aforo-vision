@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from src import clock
 from src.dedup.ttl_set import TTLSet
 from src.direction.resolver import resolve_direction, resolve_from_trajectory
 from src.events.builder import BODY_ONLY, CAMERA_INSIDE_ID, CAMERA_OUTSIDE_ID, FACE, build_event
@@ -178,7 +179,7 @@ class Pipeline:
         # Only personId leaves this machine: Supabase takes the name from its own students table, so sending
         # it would move personal data over the internet for nothing (data minimization). The name stays in the
         # local log, which never leaves the laptop.
-        event = build_event(direction, method, max(0.0, min(confidence, 1.0)), timestamp, person_id=person_id)
+        event = build_event(direction, method, max(0.0, min(confidence, 1.0)), clock.corrected(timestamp), person_id=person_id)
         name = self.names.get(person_id) if person_id else None
         logger.info("%s %s (%s, confidence %.2f)%s", direction, event["method"], event["timestamp"], event["confidence"],
                     f" -> {name}" if name else "")
