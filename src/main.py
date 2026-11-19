@@ -13,7 +13,7 @@ from pathlib import Path
 from enrollment.enroll_student import EMBEDDINGS_DIR
 from src.capture.frame_grabber import FrameGrabber
 from src.capture.motion_gate import MotionGate
-from src import performance
+from src import clock, performance
 from src.config import ConfigError, load_config, load_dotenv
 from src.dedup.ttl_set import TTLSet
 from src.debug.preview import Annotation, PreviewWindows
@@ -116,6 +116,7 @@ def main(argv: list[str] | None = None) -> int:
         heartbeat_client = HeartbeatClient(config.backend.url, config.backend.supabase_key, config.backend.device_key,
                                            config.backend.timeout_seconds)
         emit = delivery.submit
+        clock.start_sync(config.backend.url, config.backend.supabase_key)  # event time = server time, not PC time
 
     # Same models and thresholds for both cameras (AGENTS.md rule 3)
     pipeline = Pipeline(
