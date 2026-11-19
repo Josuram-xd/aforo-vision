@@ -23,6 +23,7 @@ import cv2
 import httpx
 import numpy as np
 
+from src.config import load_dotenv
 from enrollment.enroll_student import EMBEDDINGS_DIR, EnrollmentError, average_embeddings, save_enrollment, validate_person_id
 
 logger = logging.getLogger(__name__)
@@ -99,6 +100,7 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, default=EMBEDDINGS_DIR)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    load_dotenv()  # the autostart task has no env vars; main.py reads .env the same way
 
     url, key, device = (os.environ.get(n) for n in ("AFORO_BACKEND_URL", "AFORO_SUPABASE_KEY", "AFORO_DEVICE_KEY"))
     if not (url and key and device):
